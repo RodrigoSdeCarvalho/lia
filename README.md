@@ -1,2 +1,4 @@
-# Clilia
-Command Line Interface Linux Assistant
+# LIA
+Linux Assistant
+
+Currently only supports CLI front-end
