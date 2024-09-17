@@ -1,0 +1,10 @@
+[workspace]
+
+members = [
+    "back-end/core",
+    "front-end/cli",
+    "system",
+    "macros/benchmark_macro",
+]
+
+resolver = "2"

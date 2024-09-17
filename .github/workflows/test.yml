@@ -1,0 +1,29 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+
+        run: |
+          cd lia
+          cargo build
+      - name: Run tests
+        run: |
+          cd sense
+          cargo test
