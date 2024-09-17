@@ -25,5 +25,5 @@ jobs:
           cargo build
       - name: Run tests
         run: |
-          cd sense
+          cd lia
           cargo test
