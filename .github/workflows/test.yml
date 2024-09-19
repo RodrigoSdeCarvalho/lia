@@ -47,7 +47,3 @@ jobs:
         run: |
           cd lia-src
           cargo test
-
-
-          sqlx migrate run
-          cargo install sqlx-cli --no-default-features --features postgres
