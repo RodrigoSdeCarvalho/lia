@@ -21,9 +21,9 @@ jobs:
       - name: Build
 
         run: |
-          cd lia
+          cd lia-src
           cargo build
       - name: Run tests
         run: |
-          cd lia
+          cd lia-src
           cargo test
