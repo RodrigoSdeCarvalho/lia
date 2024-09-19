@@ -8,9 +8,6 @@ on:
     branches:
       - '**'
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,28 +19,20 @@ jobs:
           POSTGRES_USER: liauser
           POSTGRES_PASSWORD: liapassword
           POSTGRES_DB: liadb
-        options: >-
-          --health-cmd "pg_isready -U liauser"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        ports:
+          - 5432:5432  # Map port to access via localhost
 
     env:
-      DATABASE_URL: postgresql://liauser:liapassword@postgres:5432/liadb
+      DATABASE_URL: postgresql://liauser:liapassword@localhost:5432/liadb
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install PostgreSQL Client
+      - name: Install Dependencies
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          until pg_isready -h postgres -p 5432 -U liauser; do
-            echo "Waiting for PostgreSQL..."
-            sleep 1
-          done
-        shell: bash
+      - name: Wait for PostgreSQL to start
+        run: sleep 10  # Adjust the sleep duration as needed
 
       - name: Build
         run: |
@@ -51,8 +40,6 @@ jobs:
           cargo build
 
       - name: Run tests
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
           cd lia-src
           cargo test
