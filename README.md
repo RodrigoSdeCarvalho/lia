@@ -44,7 +44,7 @@
 
 ## Getting Started with LIA
 
-[Use Guide](/lia/docs/usage.md)
+[Use Guide](/lia-src/docs/usage.md)
 
 1. **Initialize LIA**: Set up LIA on your system to start managing your commands.
 
