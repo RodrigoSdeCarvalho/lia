@@ -13,16 +13,42 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13-alpine
+        env:
+          POSTGRES_USER: liauser
+          POSTGRES_PASSWORD: liapassword
+          POSTGRES_DB: liadb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://liauser:liapassword@postgres:5432/liadb
 
     steps:
       - uses: actions/checkout@v3
-      - name: Build
 
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h postgres -p 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
+        shell: bash
+
+      - name: Build
         run: |
           cd lia-src
           cargo build
+
       - name: Run tests
         run: |
           cd lia-src
