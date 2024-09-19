@@ -20,7 +20,7 @@ jobs:
           POSTGRES_PASSWORD: liapassword
           POSTGRES_DB: liadb
         ports:
-          - 5432:5432  # Map port to access via localhost
+          - 5432:5432
 
     env:
       DATABASE_URL: postgresql://liauser:liapassword@localhost:5432/liadb
@@ -32,7 +32,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Wait for PostgreSQL to start
-        run: sleep 10  # Adjust the sleep duration as needed
+        run: sleep 10
 
       - name: Build
         run: |
