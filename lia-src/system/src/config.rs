@@ -33,7 +33,6 @@ pub struct Kinds {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Log {
     pub on: bool,
-    pub debug: bool,
     pub save: bool,
     pub kinds: Kinds,
 }
@@ -77,8 +76,6 @@ impl Configs {
     }
 
     pub fn save(&self) -> bool { self.log.save }
-
-    pub fn debug(&self) -> bool { self.log.debug }
 
     pub fn profile(&self) -> &Profile {
         self.profile.as_ref().unwrap()

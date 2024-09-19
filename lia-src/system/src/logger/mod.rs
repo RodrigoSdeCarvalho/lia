@@ -1,8 +1,9 @@
 mod debug;
 
-use super::config::{Configs, Profile, get_process_name};
+use std::panic::Location;
 use chrono::Local as time;
 
+use super::config::{Configs, Profile, get_process_name};
 use debug::DebugLogger;
 
 macro_rules! log {
@@ -31,32 +32,36 @@ impl Logger {
 
 macro_rules! log_level {
     ($log_level:ident) => {
+        #[track_caller]
         fn $log_level<T: AsRef<str>>(message: T, show: bool) {
             let logger: Self = LoggerEssentials::open();
 
-            let (should_log, save, debug): (bool, bool, bool) = {
+            let (should_log, save): (bool, bool) = {
                 let config = Configs::open().lock().unwrap();
 
                 let should_log = config.log().on && config.log().kinds.$log_level;
                 let save = config.save();
-                let debug = config.debug();
 
-                (should_log, save, debug)
+                (should_log, save)
             };
 
             if should_log {
+                let location = Location::caller();
                 let timestamp = time::now().format("%Y-%m-%d %H:%M:%S").to_string();
-                let message = format!("{}::[{:?}] {} - {}",
+                let message = format!(
+                    "{}::[{:?}] {} [{}:{}] - {}",
                     get_process_name(),
-                    stringify!($log_level).to_uppercase(), 
-                    timestamp, 
+                    stringify!($log_level).to_uppercase(),
+                    timestamp,
+                    location.file(),
+                    location.line(),
                     message.as_ref()
                 );
+
                 if save { logger.save(&message); }
 
                 if show {
-                    if debug { dbg!(message); }
-                    else { println!("{}", message); }
+                    println!("{}", message); 
                 }
             }
         }
