@@ -1,0 +1,49 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13-alpine
+        env:
+          POSTGRES_USER: liauser
+          POSTGRES_PASSWORD: liapassword
+          POSTGRES_DB: liadb
+        ports:
+          - 5432:5432  # Map port to access via localhost
+
+    env:
+      DATABASE_URL: postgresql://liauser:liapassword@localhost:5432/liadb
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for PostgreSQL to start
+        run: sleep 10  # Adjust the sleep duration as needed
+
+      - name: Build
+        run: |
+          cd lia-src
+          cargo install sqlx-cli --no-default-features --features postgres
+          cd back-end
+          sqlx migrate run
+          cd ..
+          cargo build
+
+      - name: Run tests
+        run: |
+          cd lia-src
+          cargo test
