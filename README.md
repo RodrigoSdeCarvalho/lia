@@ -44,6 +44,8 @@
 
 ## Getting Started with LIA
 
+[Use Guide](/lia/docs/usage.md)
+
 1. **Initialize LIA**: Set up LIA on your system to start managing your commands.
 
 2. **Add Commands**: Save your commonly used commands or scripts with names and descriptions.

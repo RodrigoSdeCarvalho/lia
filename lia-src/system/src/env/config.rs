@@ -10,12 +10,13 @@ use crate::env::Env;
 static SINGLETON: Once = Once::new();
 static mut CONFIG: Option<Mutex<Config>> = None;
 
-pub(crate) struct Config {
-    profile: String
+pub struct Config {
+    profile: String,
+    database_url: String
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
-pub(crate) enum Profile {
+pub enum Profile {
     DEBUG,
 }
 
@@ -50,12 +51,15 @@ impl Env for Config {
     }
 
     fn set_env(path: &SysPath) -> () {
-        from_path(path.as_path()).expect("Failed to read .env file.");
+        from_path(path.as_path()).unwrap()
+        //     from_path(Path::new("/etc/lia/.env").as_path()).unwrap()
+        // )
     }
 
     fn read_env() -> Self {
         Config {
-            profile: env::var("PROFILE").unwrap()
+            profile: env::var("PROFILE").unwrap(),
+            database_url: env::var("DATABASE_URL").unwrap()
         }
     }
 }
@@ -66,6 +70,10 @@ impl Config {
     pub fn profile(self: &Self) -> Profile {
         Profile::from_string(&self.profile)
     }
+
+    pub fn database_url(self: &Self) -> &String {
+        &self.database_url
+    } 
 }
 
 #[cfg(test)]
@@ -76,6 +84,8 @@ mod tests {
     fn test_config() {
         let config = Config::open().lock().unwrap();
         let prof_works: bool = config.profile() == Profile::DEBUG;
+        let has_db_url: bool = config.database_url().len() > 0;
         assert_eq!(prof_works, true);
+        assert_eq!(has_db_url, true);
     }
 }
