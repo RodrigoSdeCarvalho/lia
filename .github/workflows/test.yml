@@ -22,10 +22,8 @@ jobs:
           POSTGRES_USER: liauser
           POSTGRES_PASSWORD: liapassword
           POSTGRES_DB: liadb
-        ports:
-          - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U liauser"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -36,9 +34,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install PostgreSQL Client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
       - name: Wait for PostgreSQL to be ready
         run: |
-          until pg_isready -h postgres -p 5432; do
+          until pg_isready -h postgres -p 5432 -U liauser; do
             echo "Waiting for PostgreSQL..."
             sleep 1
           done
@@ -50,6 +51,8 @@ jobs:
           cargo build
 
       - name: Run tests
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
           cd lia-src
           cargo test
