@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand, Args, arg};
-use core::{LiaCore, models::command::NewCommand};
+use lia_core::{LiaCore, models::command::NewCommand};
 
 use system::Logger;
 

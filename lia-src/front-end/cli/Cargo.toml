@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }
-core = { path = "../../back-end/core" }
+lia-core = { path = "../../back-end/core" }
 dotenv = "0.15"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 sqlx = { version = "0.8.2",features = ["postgres", "runtime-tokio-native-tls", "macros", "uuid", "chrono"] } 
