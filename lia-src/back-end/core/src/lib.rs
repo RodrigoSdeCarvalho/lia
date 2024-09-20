@@ -1,6 +1,12 @@
 pub mod models;
-pub mod db;
+mod db;
 pub mod errors;
+mod cmd_engine;
+
+use std::{
+    path::Path,
+    process::Output
+};
 
 use system::{Logger, Config};
 
@@ -24,7 +30,7 @@ impl LiaCore {
     }
 
     /// Creates a new instance of LiaCore.
-    /// It acts as API for the core functionalities of LIA.
+    /// It acts as API for the core functionalities of LiA.
     pub async fn new() -> Result<Self, LiaCoreError> {
         let database_url = Config::get_database_url();
     
@@ -81,5 +87,23 @@ impl LiaCore {
                 Err(e)
             },
         }
+    }
+
+    /// Runs a command by name in the specified path.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the command to execute.
+    /// * `path` - The path where the command should be executed.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Output, LiaCoreError>` - The output of the command or an error.
+    pub async fn run_command(&self, name: &str, path: &Path) -> Result<Output, LiaCoreError> {
+        // Retrieve the command by name
+        let cmd = self.db.get_command_by_name(name).await?;
+
+        // Execute the command using cmd_engine
+        cmd_engine::CmdEngine::execute_command(&cmd.command_text, path)
     }
 }

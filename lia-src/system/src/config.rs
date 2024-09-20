@@ -9,7 +9,7 @@ static SINGLETON: Once = Once::new();
 static mut CONFIGS: Option<Mutex<Configs>> = None;
 
 lazy_static::lazy_static! {
-    pub static ref PROCESS_NAME: Mutex<String> = Mutex::new(String::from("LIA"));
+    pub static ref PROCESS_NAME: Mutex<String> = Mutex::new(String::from("LiA"));
 }
 
 pub fn set_process_name<T: AsRef<str>>(name: T) {

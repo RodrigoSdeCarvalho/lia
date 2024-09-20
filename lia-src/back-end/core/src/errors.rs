@@ -2,6 +2,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum LiaCoreError {
+    #[error("Command execution error: {0}")]
+    CommandExecutionError(String),
+
     #[error("Database error: {0}")]
     DatabaseError(#[from] sqlx::Error),
 

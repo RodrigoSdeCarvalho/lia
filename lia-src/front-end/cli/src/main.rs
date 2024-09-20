@@ -4,7 +4,7 @@ use lia_core::{LiaCore, models::command::NewCommand};
 use system::Logger;
 
 #[derive(Parser)]
-#[command(name = "CLILIA", version = "0.1", author = "Your Name", about = "Linux Assistant CLI")]
+#[command(name = "CLILiA", version = "0.1", author = "Your Name", about = "Linux Assistant CLI")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -14,7 +14,7 @@ struct Cli {
 enum Commands {
     /// Initializes the database and configurations.
     Init,
-    /// Adds a new command to LIA's storage.
+    /// Adds a new command to LiA's storage.
     Add(AddCommand),
     /// Lists all stored commands.
     List,
@@ -87,17 +87,15 @@ async fn main() {
             }
         }
         Commands::Run { name } => {
-            match lia_core.get_command_by_name(&name).await {
-                Ok(cmd) => {
-                    let output = std::process::Command::new("sh")
-                        .arg("-c")
-                        .arg(&cmd.command_text)
-                        .output()
-                        .expect("Failed to execute command");
-
+            if let Ok(path) = std::env::current_dir() {
+                // let output = lia_core.run_command(&name, &path).await.unwrap();
+                if let Ok(output) = lia_core.run_command(&name, &path).await {
                     println!("{}", String::from_utf8_lossy(&output.stdout));
+                } else {
+                    println!("Error running command.");
                 }
-                Err(e) => println!("Error executing command: {}", e),
+            } else {
+                println!("Error getting current directory.");
             }
         }
     }

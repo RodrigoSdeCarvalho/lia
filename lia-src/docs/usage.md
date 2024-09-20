@@ -1,8 +1,8 @@
-# LIA Command-Line Tool Help Guide
+# LiA Command-Line Tool Help Guide
 
-LIA (Linux Assistant) is a command-line tool designed to help you store, manage, and execute your frequently used Linux commands and scripts efficiently.
+LiA (Linux Assistant) is a command-line tool designed to help you store, manage, and execute your frequently used Linux commands and scripts efficiently.
 
-Below is a guide on how to use each LIA command, with a focus on the `add` command.
+Below is a guide on how to use each LiA command, with a focus on the `add` command.
 
 ---
 
@@ -12,7 +12,7 @@ Below is a guide on how to use each LIA command, with a focus on the `add` comma
 lia <command> [options]
 ```
 
-- Replace `<command>` with one of LIA's available commands.
+- Replace `<command>` with one of LiA's available commands.
 - Use `[options]` to pass specific arguments or flags to the command.
 
 ---
@@ -20,7 +20,7 @@ lia <command> [options]
 ## Commands Overview
 
 - **`init`**: Initializes the database and configurations.
-- **`add`**: Adds a new command to LIA's storage.
+- **`add`**: Adds a new command to LiA's storage.
 - **`list`**: Lists all stored commands.
 - **`run`**: Executes a stored command by name.
 
@@ -28,7 +28,7 @@ lia <command> [options]
 
 ## `init` Command
 
-**Description**: Sets up LIA by initializing the database and necessary configurations.
+**Description**: Sets up LiA by initializing the database and necessary configurations.
 
 ### Usage
 
@@ -49,7 +49,7 @@ lia init
 
 ## `add` Command
 
-**Description**: Adds a new command to LIA's storage for easy access and execution later.
+**Description**: Adds a new command to LiA's storage for easy access and execution later.
 
 ### Usage
 
@@ -170,7 +170,7 @@ lia run "list_home"
 
 ### Viewing Help
 
-For help information about LIA and its commands, use:
+For help information about LiA and its commands, use:
 
 ```bash
 lia --help
@@ -193,7 +193,7 @@ lia add --help
 ```
 Usage: lia add <name> <command_text> [OPTIONS]
 
-Adds a new command to LIA's storage.
+Adds a new command to LiA's storage.
 
 Arguments:
   <name>          A unique name for the command
@@ -207,10 +207,10 @@ Options:
 
 ---
 
-## Tips for Using LIA
+## Tips for Using LiA
 
 - **Meaningful Names**: Use descriptive names for your commands to make them easy to remember.
-- **Organize with Tags**: Categorize your commands with tags for easier searching and management in future updates of LIA.
+- **Organize with Tags**: Categorize your commands with tags for easier searching and management in future updates of LiA.
 - **Descriptions**: Providing a description helps you recall the purpose of each command, especially if you have many stored.
 - **Regular Updates**: Keep your stored commands up to date, especially if they involve paths or resources that may change.
 
@@ -218,7 +218,7 @@ Options:
 
 ## Example Workflow
 
-1. **Initialize LIA**:
+1. **Initialize LiA**:
 
    ```bash
    lia init
@@ -254,7 +254,7 @@ Options:
 
 - **Command Not Found**: If you receive an error stating that a command was not found, ensure that you have added it correctly and that you're using the correct name.
 - **Permission Denied**: If you encounter permission issues when running commands, check if `sudo` is required and included in your `command_text`.
-- **Docker Issues**: Since LIA relies on Docker for the database, ensure Docker is installed and running on your system.
+- **Docker Issues**: Since LiA relies on Docker for the database, ensure Docker is installed and running on your system.
 
 ---
 
@@ -263,11 +263,11 @@ Options:
 If you need further assistance or encounter issues:
 
 - **Check the Documentation**: Review the help information provided by the `--help` flag.
-- **Update LIA**: Ensure you are using the latest version of LIA.
+- **Update LiA**: Ensure you are using the latest version of LiA.
 - **Contact Support**: Reach out to the maintainers or community for support.
 
 ---
 
-By understanding and utilizing the commands and options available in LIA, especially the `add` command, you can significantly enhance your productivity and streamline your command-line workflows.
+By understanding and utilizing the commands and options available in LiA, especially the `add` command, you can significantly enhance your productivity and streamline your command-line workflows.
 
-Feel free to explore and customize LIA to best suit your needs!
+Feel free to explore and customize LiA to best suit your needs!
