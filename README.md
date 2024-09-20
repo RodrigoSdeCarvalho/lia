@@ -1,6 +1,6 @@
-# LIA: Your Personal Linux Command Assistant
+# LiA: Your Personal Linux Command Assistant
 
-**LIA** (Linux Assistant) is a tool designed to simplify your interaction with the Linux command line by helping you store, manage, and execute your most-used commands and scripts effortlessly.
+**LiA** (Linux Assistant) is a tool designed to simplify your interaction with the Linux command line by helping you store, manage, and execute your most-used commands and scripts effortlessly.
 
 ## Key Features
 
@@ -12,7 +12,7 @@
 
 - **Persistent Storage**: Your commands are stored securely and persistently, so they're always available when you need them.
 
-## How LIA Enhances Your Workflow
+## How LiA Enhances Your Workflow
 
 - **Boost Productivity**: Save time by quickly executing complex commands or scripts you've previously saved.
 
@@ -20,9 +20,9 @@
 
 - **Organize Commands**: Keep your command-line tools and scripts organized with descriptions and tags, making them easy to find.
 
-- **Simplify Learning**: For those new to Linux, LIA can serve as a personalized library of commands, aiding in the learning process.
+- **Simplify Learning**: For those new to Linux, LiA can serve as a personalized library of commands, aiding in the learning process.
 
-## Who Can Benefit from LIA?
+## Who Can Benefit from LiA?
 
 - **Developers**: Streamline development workflows by storing build commands, deployment scripts, or testing routines.
 
@@ -32,21 +32,21 @@
 
 - **Power Users**: Enhance your command-line experience by reducing repetitive typing and keeping your environment tidy.
 
-## Why Choose LIA?
+## Why Choose LiA?
 
-- **User-Friendly Interface**: Interact with LIA through a simple command-line interface that's easy to use.
+- **User-Friendly Interface**: Interact with LiA through a simple command-line interface that's easy to use.
 
-- **Customizable**: Tailor LIA to your needs by adding commands that suit your specific tasks and workflows.
+- **Customizable**: Tailor LiA to your needs by adding commands that suit your specific tasks and workflows.
 
 - **Secure Execution**: Commands are executed locally, ensuring your system's security and integrity.
 
 - **Open-Source Foundation**: Built with robust and reliable technologies, providing transparency and community support.
 
-## Getting Started with LIA
+## Getting Started with LiA
 
 [Use Guide](/lia-src/docs/usage.md)
 
-1. **Initialize LIA**: Set up LIA on your system to start managing your commands.
+1. **Initialize LiA**: Set up LiA on your system to start managing your commands.
 
 2. **Add Commands**: Save your commonly used commands or scripts with names and descriptions.
 
@@ -54,10 +54,10 @@
 
 4. **Execute Commands**: Run any of your saved commands instantly without retyping them.
 
-## Embrace Efficiency with LIA
+## Embrace Efficiency with LiA
 
-LIA is more than just a tool; it's your personal assistant in the Linux environment. By centralizing your commands and scripts, LIA helps you work smarter, not harder.
+LiA is more than just a tool; it's your personal assistant in the Linux environment. By centralizing your commands and scripts, LiA helps you work smarter, not harder.
 
 ---
 
-**Experience the convenience of having all your essential Linux commands at your fingertips with LIA!**
+**Experience the convenience of having all your essential Linux commands at your fingertips with LiA!**

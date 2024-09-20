@@ -1,4 +1,4 @@
-.PHONY: init up down
+.PHONY: init up down build install
 
 init:
 	@echo "Initializing the database..."
@@ -23,6 +23,8 @@ build:
 	@echo "lia built."
 
 install:
-	@echo "Installing lia..."
-	./install.sh
+	@echo "Ensuring install script has correct Unix file type..."
+	@dos2unix ./install.sh 2>/dev/null || sed -i 's/\r//' ./install
+	@chmod +x ./install.sh
+	@./install.sh
 	@echo "lia installed."

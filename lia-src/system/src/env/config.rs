@@ -52,8 +52,6 @@ impl Env for Config {
 
     fn set_env(path: &SysPath) -> () {
         from_path(path.as_path()).unwrap()
-        //     from_path(Path::new("/etc/lia/.env").as_path()).unwrap()
-        // )
     }
 
     fn read_env() -> Self {
@@ -67,13 +65,29 @@ impl Env for Config {
 impl Config {
     pub fn open<'a>() -> &'a Mutex<Config> { Self::get() }
 
-    pub fn profile(self: &Self) -> Profile {
+    pub fn get_profile() -> Profile {
+        let profile = {
+            let config = Config::open().lock().unwrap();
+            config.profile().clone()
+        };
+        profile
+    }
+
+    fn profile(self: &Self) -> Profile {
         Profile::from_string(&self.profile)
     }
 
-    pub fn database_url(self: &Self) -> &String {
+    pub fn get_database_url() -> String {
+        let database_url = {
+            let config = Config::open().lock().unwrap();
+            config.database_url().clone()
+        };
+        database_url
+    }
+
+    fn database_url(self: &Self) -> &String {
         &self.database_url
-    } 
+    }
 }
 
 #[cfg(test)]

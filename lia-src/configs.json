@@ -1,8 +1,7 @@
 {
   "log" : {
     "on" : true,
-    "debug" : false,
-    "save" : false,
+    "save" : true,
     "kinds" : {
       "trace" : true,
       "info" : true,

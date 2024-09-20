@@ -1,0 +1,8 @@
+Test::["INFO"] 2024-09-19 22:31:34 [system/src/logger/mod.rs:57] - Test info message
+Test::["INFO"] 2024-09-19 22:31:34 [system/src/logger/debug.rs:90] - Test info message
+Test::["TRACE"] 2024-09-19 22:31:34 [system/src/logger/mod.rs:58] - Test trace message
+Test::["TRACE"] 2024-09-19 22:31:34 [system/src/logger/debug.rs:91] - Test trace message
+Test::["WARN"] 2024-09-19 22:31:34 [system/src/logger/mod.rs:59] - Test warning message
+Test::["WARN"] 2024-09-19 22:31:34 [system/src/logger/debug.rs:92] - Test warning message
+Test::["ERROR"] 2024-09-19 22:31:34 [system/src/logger/mod.rs:61] - Test error message
+Test::["ERROR"] 2024-09-19 22:31:34 [system/src/logger/debug.rs:94] - Test error message
