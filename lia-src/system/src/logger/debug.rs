@@ -5,7 +5,6 @@ use std::{
 };
 use chrono::Local as time;
 
-
 use super::{ILogger, LoggerEssentials, Configs};
 use crate::{config::get_process_name, path::{join_root, Path, SysPath}};
 
@@ -20,15 +19,8 @@ macro_rules! log_level_impl {
         #[track_caller]
         fn $log_level<T: AsRef<str>>(message: T, show: bool) {
             let logger: Self = LoggerEssentials::open();
-
-            let (should_log, save): (bool, bool) = {
-                let config = Configs::open().lock().unwrap();
-
-                let should_log = config.log().on && config.log().kinds.$log_level;
-                let save = config.save();
-
-                (should_log, save)
-            };
+            let save = Configs::get_save();
+            let should_log = Configs::get_log().kinds.$log_level;
 
             if should_log {
                 let location = Location::caller();
@@ -76,11 +68,15 @@ impl LoggerEssentials for DebugLogger {
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
-            .open(&path)
-            .unwrap();
-
-        let message = format!("{}\n", message);
-        file.write_all(message.as_bytes()).unwrap();
+            .open(&path);
+        match file {
+            Ok(_) => {
+                let message = format!("{}\n", message);
+                let ok_file = file.as_mut().unwrap();
+                ok_file.write_all(message.as_bytes()).unwrap();
+            },
+            Err(_) => {}
+        }
     }
 }
 

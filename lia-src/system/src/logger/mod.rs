@@ -7,10 +7,7 @@ macro_rules! log {
     ($log_level:ident) => {
         #[track_caller]
         pub fn $log_level<T: AsRef<str>>(message: T, show: bool) {
-            let profile = {
-                let config = Configs::open().lock().unwrap();
-                config.profile().clone()
-            };
+            let profile = Configs::get_profile();
 
             match profile {
                 Profile::DEBUG => DebugLogger::$log_level(message, show),

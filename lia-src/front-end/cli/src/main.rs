@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand, Args, arg};
 use core::{LiaCore, models::command::NewCommand};
-use system::Config;
+
+use system::Logger;
 
 #[derive(Parser)]
 #[command(name = "CLILIA", version = "0.1", author = "Your Name", about = "Linux Assistant CLI")]
@@ -41,17 +42,22 @@ struct AddCommand {
 
 #[tokio::main]
 async fn main() {
-    let config = Config::open().lock().unwrap();
 
     let cli = Cli::parse();
 
-    let database_url = config.database_url();
-
-    let lia_core = LiaCore::new(&database_url).await;
+    let lia_core = if let Ok(core) = LiaCore::new().await {
+        core
+    } else {
+        Logger::error("Failed to create LiaCore instance", true);
+        return;
+    };
 
     match cli.command {
         Commands::Init => {
-            initialize_database(&database_url).await;
+            match LiaCore::init().await {
+                Ok(_) => println!("Database initialized successfully."),
+                Err(e) => println!("Error initializing database: {}", e),
+            }
         }
         Commands::Add(add_cmd) => {
             let tags_vec = add_cmd.tags.map(|t| t.split(',').map(|s| s.trim().to_string()).collect());
@@ -63,7 +69,7 @@ async fn main() {
             };
             match lia_core.add_command(new_cmd).await {
                 Ok(_) => println!("Command added successfully."),
-                Err(e) => eprintln!("Error adding command: {}", e),
+                Err(e) => println!("Error adding command: {}", e),
             }
         }
         Commands::List => {
@@ -77,7 +83,7 @@ async fn main() {
                         println!("---");
                     }
                 }
-                Err(e) => eprintln!("Error retrieving commands: {}", e),
+                Err(e) => println!("Error retrieving commands: {}", e),
             }
         }
         Commands::Run { name } => {
@@ -91,26 +97,8 @@ async fn main() {
 
                     println!("{}", String::from_utf8_lossy(&output.stdout));
                 }
-                Err(e) => eprintln!("Error executing command: {}", e),
+                Err(e) => println!("Error executing command: {}", e),
             }
         }
     }
-}
-
-async fn initialize_database(database_url: &str) {
-    std::process::Command::new("docker-compose")
-        .args(&["up", "-d"])
-        .status()
-        .expect("Failed to start the database container");
-
-    println!("Waiting for the database to start...");
-    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
-    println!("Initializing database...");
-    sqlx::migrate!("../../back-end/migrations")
-        .run(&sqlx::PgPool::connect(&database_url).await.expect("Failed to connect to database"))
-        .await
-        .expect("Failed to run migrations");
-
-    println!("Database initialized successfully.");
 }

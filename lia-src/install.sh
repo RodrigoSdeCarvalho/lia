@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sudo mkdir -p /usr/local/bin/lia-src
+sudo mkdir -p /usr/local/bin/lia-src/logs
 
 sudo cp ./target/release/cli /usr/local/bin/lia
 

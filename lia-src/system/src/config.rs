@@ -9,7 +9,7 @@ static SINGLETON: Once = Once::new();
 static mut CONFIGS: Option<Mutex<Configs>> = None;
 
 lazy_static::lazy_static! {
-    pub static ref PROCESS_NAME: Mutex<String> = Mutex::new(String::from("RaTuS"));
+    pub static ref PROCESS_NAME: Mutex<String> = Mutex::new(String::from("LIA"));
 }
 
 pub fn set_process_name<T: AsRef<str>>(name: T) {
@@ -22,7 +22,7 @@ pub fn get_process_name() -> String {
     process_name.clone()
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Kinds {
     pub trace: bool,
     pub info: bool,
@@ -30,7 +30,7 @@ pub struct Kinds {
     pub error: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Log {
     pub on: bool,
     pub save: bool,
@@ -63,7 +63,7 @@ impl Configs {
         let config: SysPath= join_root!("configs.json");
         let content: String = std::fs::read_to_string(config).unwrap();
         let config: Configs = serde_json::from_str(&content).unwrap();
-        let profile: Profile = Env::open().lock().unwrap().profile();
+        let profile: Profile = Env::get_profile();
 
         Configs {
             profile: Some(profile),
@@ -71,13 +71,37 @@ impl Configs {
         }
     }
 
-    pub fn log(&self) -> &Log {
+    pub fn get_log() -> Log {
+        let log = {
+            let config = Configs::open().lock().unwrap();
+            config.log().clone()
+        };
+        log.clone()
+    }
+
+    fn log(&self) -> &Log {
         &self.log
     }
 
-    pub fn save(&self) -> bool { self.log.save }
+    pub fn get_save() -> bool {
+        let save = {
+            let config = Configs::open().lock().unwrap();
+            config.save()
+        };
+        save
+    }
 
-    pub fn profile(&self) -> &Profile {
+    fn save(&self) -> bool { self.log.save }
+
+    pub fn get_profile() -> Profile {
+        let profile = {
+            let config = Configs::open().lock().unwrap();
+            config.profile().clone()
+        };
+        profile
+    }
+
+    fn profile(&self) -> &Profile {
         self.profile.as_ref().unwrap()
     }
 }
