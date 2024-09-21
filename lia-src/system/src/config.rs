@@ -158,12 +158,12 @@ mod tests {
         let log = Configs::get_log();
         assert_eq!(log.on, false);
         assert_eq!(log.save, false);
-        Configs::set_log(true, true, None);
+        Configs::set_log(true, false, None);
         assert!(Configs::get_log().on);
-        assert!(Configs::get_log().save);
+        assert!(!Configs::get_log().save);
         // Reload from file
         Configs::reload();
         assert!(Configs::get_log().on);
-        assert!(Configs::get_log().save);
+        assert!(!Configs::get_log().save);
     }
 }

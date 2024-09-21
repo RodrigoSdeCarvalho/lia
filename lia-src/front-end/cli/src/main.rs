@@ -5,7 +5,7 @@ use std::{
 use clap::{Parser, Subcommand, Args, arg};
 
 use lia_core::{LiaCore, models::command::NewCommand};
-use system::{Logger, set_process_name};
+use system::{Logger, set_process_name, SysConfigs};
 
 #[derive(Parser)]
 #[command(name = "CLILiA", version = "0.1", author = "Your Name", about = "Linux Assistant CLI")]
@@ -27,7 +27,15 @@ enum Commands {
         /// Name of the command to execute.
         name: String,
     },
-    // Additional commands like Delete, Update, Search can be added here
+    /// Toggle logging on/off. Must be run with sudo.
+    Log {
+        /// Enable logging
+        #[arg(long)]
+        on: bool,
+        /// Disable logging
+        #[arg(long)]
+        off: bool,
+    },
 }
 
 #[derive(Args)]
@@ -121,6 +129,12 @@ async fn main() {
             } else {
                 println!("Error running command.");
             }
+        }
+        Commands::Log { on, off } => {
+            let toggle = on || !off;
+
+            SysConfigs::set_log(toggle, false, None);
+            println!("Logging turned {}", if toggle { "on" } else { "off" });
         }
     }
 }

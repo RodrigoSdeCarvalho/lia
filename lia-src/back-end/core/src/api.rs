@@ -3,7 +3,7 @@ use std::{
     process::Output, sync::mpsc::Sender
 };
 
-use system::{Logger, Config};
+use system::{Logger, EnvConfig};
 
 use crate::{
     db::Database,
@@ -19,14 +19,14 @@ pub struct LiaCore {
 impl LiaCore {
     pub async fn init() -> Result<(), LiaCoreError> {
         Logger::info("Initializing the database.", true);
-        let database_url = Config::get_database_url();
+        let database_url = EnvConfig::get_database_url();
 
         let res = Database::initialize_database(&database_url).await;
         res
     }
 
     pub async fn new() -> Result<Self, LiaCoreError> {
-        let database_url = Config::get_database_url();
+        let database_url = EnvConfig::get_database_url();
     
         let db = Database::new(&database_url).await;
         match db {
