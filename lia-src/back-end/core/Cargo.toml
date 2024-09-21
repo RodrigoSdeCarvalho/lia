@@ -10,7 +10,7 @@ sqlx = { version = "0.8.2",features = ["postgres", "runtime-tokio-native-tls", "
 serde = { version = "1.0", features = ["derive"] }
 uuid = { version = "1.1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1", features = ["full"] }
 thiserror = "1.0"
 system = { path = "../../system" }
 benchmark_macro = { version = "0.1.0", path = "../../macros/benchmark_macro" }

@@ -5,7 +5,7 @@ mod cmd_engine;
 
 use std::{
     path::Path,
-    process::Output
+    process::Output, sync::mpsc::Sender
 };
 
 use system::{Logger, Config};
@@ -19,8 +19,6 @@ pub struct LiaCore {
 }
 
 impl LiaCore {
-    /// Initializes the database and configurations.
-    /// Should be called only once at the start up of the program.
     pub async fn init() -> Result<(), LiaCoreError> {
         Logger::info("Initializing the database.", true);
         let database_url = Config::get_database_url();
@@ -29,8 +27,6 @@ impl LiaCore {
         res
     }
 
-    /// Creates a new instance of LiaCore.
-    /// It acts as API for the core functionalities of LiA.
     pub async fn new() -> Result<Self, LiaCoreError> {
         let database_url = Config::get_database_url();
     
@@ -89,21 +85,16 @@ impl LiaCore {
         }
     }
 
-    /// Runs a command by name in the specified path.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The name of the command to execute.
-    /// * `path` - The path where the command should be executed.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Output, LiaCoreError>` - The output of the command or an error.
-    pub async fn run_command(&self, name: &str, path: &Path) -> Result<Output, LiaCoreError> {
-        // Retrieve the command by name
-        let cmd = self.db.get_command_by_name(name).await?;
-
-        // Execute the command using cmd_engine
+    pub async fn run_command(&self, cmd: Command, path: &Path) -> Result<Output, LiaCoreError> {
         cmd_engine::CmdEngine::execute_command(&cmd.command_text, path)
+    }
+
+    pub async fn run_command_stream(
+        &self,
+        cmd: Command,
+        path: &Path,
+        output_tx: Sender<String>,
+    ) -> Result<(), LiaCoreError> {
+        cmd_engine::CmdEngine::execute_command_stream(&cmd.command_text, path, output_tx)
     }
 }

@@ -6,6 +6,8 @@ use crate::models::command::{Command, NewCommand};
 use crate::errors::LiaCoreError;
 use sqlx::Error as SqlxError;
 
+use system::Logger;
+
 pub struct Database {
     pub pool: PgPool,
 }
@@ -24,10 +26,10 @@ impl Database {
             )));
         }
 
-        println!("Waiting for the database to start...");
+        Logger::info("Waiting for the database to start...", true);
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
-        println!("Initializing database...");
+        Logger::info("Initializing the database...", true);
         let pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(database_url)
@@ -39,7 +41,7 @@ impl Database {
             .await
             .map_err(LiaCoreError::MigrationError)?;
 
-        println!("Database initialized successfully.");
+        Logger::info("Database initialized successfully.", true);
         Ok(())
     }
 
