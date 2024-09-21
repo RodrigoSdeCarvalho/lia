@@ -5,7 +5,7 @@ use std::{
 use clap::{Parser, Subcommand, Args, arg};
 
 use lia_core::{LiaCore, models::command::NewCommand};
-use system::Logger;
+use system::{Logger, set_process_name};
 
 #[derive(Parser)]
 #[command(name = "CLILiA", version = "0.1", author = "Your Name", about = "Linux Assistant CLI")]
@@ -46,6 +46,8 @@ struct AddCommand {
 
 #[tokio::main]
 async fn main() {
+    set_process_name("CLILiA");
+
     let cli = Cli::parse();
 
     let lia_core = if let Ok(core) = LiaCore::new().await {
