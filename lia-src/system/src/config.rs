@@ -83,6 +83,27 @@ impl Configs {
         &self.log
     }
 
+    pub fn set_log(on: bool, save: bool, kinds: Option<Kinds>) {
+        { // Unlock mutex guard before saving to file
+            let mut config = Configs::open().lock().unwrap();
+            config.log.on = on;
+            config.log.save = save;
+            if let  Some(kinds) = kinds {
+                config.log.kinds = kinds;
+            }
+        }
+        Configs::save_to_file();
+    }
+
+    fn save_to_file() {
+        let config_path: SysPath = join_root!("configs.json");
+
+        let config = Configs::open().lock().unwrap();
+        let config_str = serde_json::to_string_pretty(&*config).unwrap();
+
+        std::fs::write(config_path, config_str).unwrap();
+    }
+
     pub fn get_save() -> bool {
         let save = {
             let config = Configs::open().lock().unwrap();
@@ -104,6 +125,16 @@ impl Configs {
     fn profile(&self) -> &Profile {
         self.profile.as_ref().unwrap()
     }
+
+    pub fn reload() {
+        let config_path: SysPath = join_root!("configs.json");
+        let content: String = std::fs::read_to_string(config_path).unwrap();
+        let new_config: Configs = serde_json::from_str(&content).unwrap();
+
+        let mut config_guard = Configs::open().lock().unwrap();
+        *config_guard = new_config;
+    }
+    
 }
 
 #[cfg(test)]
@@ -113,5 +144,26 @@ mod tests {
     #[test]
     fn test_new() {
         drop(Configs::open().lock().unwrap());
+    }
+
+    #[test]
+    fn test_get_log() {
+        let _ = Configs::get_log();
+        Configs::set_log(false, false, None);
+        let log = Configs::get_log();
+        assert_eq!(log.on, false);
+        assert_eq!(log.save, false);
+        // Reload from file
+        Configs::reload();
+        let log = Configs::get_log();
+        assert_eq!(log.on, false);
+        assert_eq!(log.save, false);
+        Configs::set_log(true, true, None);
+        assert!(Configs::get_log().on);
+        assert!(Configs::get_log().save);
+        // Reload from file
+        Configs::reload();
+        assert!(Configs::get_log().on);
+        assert!(Configs::get_log().save);
     }
 }

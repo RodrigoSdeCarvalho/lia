@@ -1,12 +1,13 @@
 {
-  "log" : {
-    "on" : true,
-    "save" : true,
-    "kinds" : {
-      "trace" : true,
-      "info" : true,
-      "warn" : true,
-      "error" : true
+  "log": {
+    "on": true,
+    "save": true,
+    "kinds": {
+      "trace": true,
+      "info": true,
+      "warn": true,
+      "error": true
     }
-  }
+  },
+  "profile": "DEBUG"
 }

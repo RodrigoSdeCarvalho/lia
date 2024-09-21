@@ -20,7 +20,8 @@ macro_rules! log_level_impl {
         fn $log_level<T: AsRef<str>>(message: T, show: bool) {
             let logger: Self = LoggerEssentials::open();
             let save = Configs::get_save();
-            let should_log = Configs::get_log().kinds.$log_level;
+            let is_log_on = Configs::get_log().on;
+            let should_log = is_log_on && Configs::get_log().kinds.$log_level;
 
             if should_log {
                 let location = Location::caller();
