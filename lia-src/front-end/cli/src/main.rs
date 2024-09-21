@@ -14,7 +14,7 @@ struct Cli {
 enum Commands {
     /// Initializes the database and configurations.
     Init,
-    /// Adds a new command to LiA's storage.
+    /// Adds a new command to LiA's storage | Example: lia add "ls" "ls -la" --description "List all files" --tags "list,files"
     Add(AddCommand),
     /// Lists all stored commands.
     List,
@@ -42,7 +42,6 @@ struct AddCommand {
 
 #[tokio::main]
 async fn main() {
-
     let cli = Cli::parse();
 
     let lia_core = if let Ok(core) = LiaCore::new().await {
