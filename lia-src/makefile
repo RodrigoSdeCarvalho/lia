@@ -24,7 +24,7 @@ build:
 
 install:
 	@echo "Ensuring install script has correct Unix file type..."
-	@dos2unix ./install.sh 2>/dev/null || sed -i 's/\r//' ./install
-	@chmod +x ./install.sh
-	@./install.sh
+	@dos2unix ./scripts/install.sh 2>/dev/null || sed -i 's/\r//' ./scripts/install
+	@chmod +x ./scripts/install.sh
+	@./scripts/install.sh
 	@echo "lia installed."
