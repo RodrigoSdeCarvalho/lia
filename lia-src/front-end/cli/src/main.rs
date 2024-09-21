@@ -1,6 +1,10 @@
+use std::{
+    sync::mpsc::channel,
+    thread,
+};
 use clap::{Parser, Subcommand, Args, arg};
-use lia_core::{LiaCore, models::command::NewCommand};
 
+use lia_core::{LiaCore, models::command::NewCommand};
 use system::Logger;
 
 #[derive(Parser)]
@@ -53,6 +57,7 @@ async fn main() {
 
     match cli.command {
         Commands::Init => {
+            println!("Initializing database...");
             match LiaCore::init().await {
                 Ok(_) => println!("Database initialized successfully."),
                 Err(e) => println!("Error initializing database: {}", e),
@@ -86,15 +91,33 @@ async fn main() {
             }
         }
         Commands::Run { name } => {
-            if let Ok(path) = std::env::current_dir() {
-                // let output = lia_core.run_command(&name, &path).await.unwrap();
-                if let Ok(output) = lia_core.run_command(&name, &path).await {
-                    println!("{}", String::from_utf8_lossy(&output.stdout));
-                } else {
-                    println!("Error running command.");
+            let path = match std::env::current_dir() {
+                Ok(p) => p,
+                Err(_) => {
+                    println!("Error getting current directory.");
+                    return;
                 }
+            };
+
+            let (tx, rx) = channel();
+            let handle = thread::spawn(move || {
+                while let Ok(line) = rx.recv() {
+                    println!("{}", line);
+                }
+            });
+
+            let cmd = match lia_core.get_command_by_name(&name).await {
+                Ok(cmd) => cmd,
+                Err(_) => {
+                    println!("Command not found.");
+                    return;
+                }
+            };
+
+            if let Ok(_) = lia_core.run_command_stream(cmd, &path, tx).await {
+                handle.join().expect("Failed to join thread");
             } else {
-                println!("Error getting current directory.");
+                println!("Error running command.");
             }
         }
     }
