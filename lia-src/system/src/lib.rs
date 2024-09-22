@@ -7,10 +7,10 @@ mod logger;
 pub use logger::Logger;
 
 mod config;
-pub use config::{set_process_name, get_process_name};
+pub use config::{set_process_name, get_process_name, Configs as SysConfigs};
 
 mod env;
-pub use env::config::Config;
+pub use env::config::Config as EnvConfig;
 
 pub mod defer;
 

@@ -4,8 +4,8 @@ use std::{
 };
 use clap::{Parser, Subcommand, Args, arg};
 
-use lia_core::{LiaCore, models::command::NewCommand};
-use system::Logger;
+use lia_core::{LiaCore, models::command::{NewCommand, UpdateCommand}};
+use system::{Logger, set_process_name, SysConfigs};
 
 #[derive(Parser)]
 #[command(name = "CLILiA", version = "0.1", author = "Your Name", about = "Linux Assistant CLI")]
@@ -19,7 +19,9 @@ enum Commands {
     /// Initializes the database and configurations.
     Init,
     /// Adds a new command to LiA's storage | Example: lia add "ls" "ls -la" --description "List all files" --tags "list,files"
-    Add(AddCommand),
+    Add(CLIAddCommand),
+    /// Updates an existing command.
+    Update(CLIUpdateCommand),
     /// Lists all stored commands.
     List,
     /// Executes a stored command by its name.
@@ -27,11 +29,19 @@ enum Commands {
         /// Name of the command to execute.
         name: String,
     },
-    // Additional commands like Delete, Update, Search can be added here
+    /// Toggle logging on/off. Must be run with sudo.
+    Log {
+        /// Enable logging
+        #[arg(long)]
+        on: bool,
+        /// Disable logging
+        #[arg(long)]
+        off: bool,
+    },
 }
 
 #[derive(Args)]
-struct AddCommand {
+struct CLIAddCommand {
     /// A unique name for the command.
     name: String,
     /// The command or script to store.
@@ -44,8 +54,25 @@ struct AddCommand {
     tags: Option<String>,
 }
 
+#[derive(Args)]
+struct CLIUpdateCommand {
+    /// Name of the command to update.
+    name: String,
+    /// New command text.
+    #[arg(short, long)]
+    command_text: Option<String>,
+    /// New description.
+    #[arg(short, long)]
+    description: Option<String>,
+    /// New tags.
+    #[arg(short, long)]
+    tags: Option<String>,
+}
+
 #[tokio::main]
 async fn main() {
+    set_process_name("CLILiA");
+
     let cli = Cli::parse();
 
     let lia_core = if let Ok(core) = LiaCore::new().await {
@@ -74,6 +101,19 @@ async fn main() {
             match lia_core.add_command(new_cmd).await {
                 Ok(_) => println!("Command added successfully."),
                 Err(e) => println!("Error adding command: {}", e),
+            }
+        }
+        Commands::Update(update_cmd) => {
+            let tags_vec = update_cmd.tags.map(|t| t.split(',').map(|s| s.trim().to_string()).collect());
+            let new_cmd = UpdateCommand {
+                name: update_cmd.name,
+                new_command_text: update_cmd.command_text,
+                new_description: update_cmd.description,
+                new_tags: tags_vec,
+            };
+            match lia_core.update_command(new_cmd).await {
+                Ok(_) => println!("Command updated successfully."),
+                Err(e) => println!("Error updating command: {}", e),
             }
         }
         Commands::List => {
@@ -119,6 +159,12 @@ async fn main() {
             } else {
                 println!("Error running command.");
             }
+        }
+        Commands::Log { on, off } => {
+            let toggle = on || !off;
+
+            SysConfigs::set_log(toggle, false, None);
+            println!("Logging turned {}", if toggle { "on" } else { "off" });
         }
     }
 }

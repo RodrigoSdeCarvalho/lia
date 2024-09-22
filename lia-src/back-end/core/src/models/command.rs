@@ -20,3 +20,11 @@ pub struct NewCommand {
     pub command_text: String,
     pub tags: Option<Vec<String>>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateCommand {
+    pub name: String,
+    pub new_tags: Option<Vec<String>>,
+    pub new_description: Option<String>,
+    pub new_command_text: Option<String>,
+}
