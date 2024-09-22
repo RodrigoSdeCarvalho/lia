@@ -1,8 +1,11 @@
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{
+    postgres::PgPoolOptions, 
+    PgPool,
+};
 use uuid::Uuid;
 use chrono::Utc;
 
-use crate::models::command::{Command, NewCommand};
+use crate::models::command::{Command, NewCommand, UpdateCommand};
 use crate::errors::LiaCoreError;
 use sqlx::Error as SqlxError;
 
@@ -75,6 +78,64 @@ impl Database {
         .map_err(LiaCoreError::DatabaseError)?;
         Ok(())
     }
+
+    pub async fn update_command(
+        &self,
+        update_cmd: UpdateCommand,
+    ) -> Result<(), LiaCoreError> {
+        let mut tx = self.pool.begin().await.map_err(LiaCoreError::DatabaseError)?;
+    
+        if let Some(tags) = update_cmd.new_tags {
+            sqlx::query!(
+                r#"
+                UPDATE commands
+                SET tags = $1, updated_at = $2
+                WHERE name = $3  -- Use name instead of id
+                "#,
+                &tags,
+                Utc::now().naive_utc(),
+                update_cmd.name
+            )
+            .execute(&mut *tx)  // Dereference `tx` here
+            .await
+            .map_err(LiaCoreError::DatabaseError)?;
+        }
+    
+        if let Some(description) = update_cmd.new_description {
+            sqlx::query!(
+                r#"
+                UPDATE commands
+                SET description = $1, updated_at = $2
+                WHERE name = $3  -- Use name instead of id
+                "#,
+                description,
+                Utc::now().naive_utc(),
+                update_cmd.name
+            )
+            .execute(&mut *tx)  // Dereference `tx` here
+            .await
+            .map_err(LiaCoreError::DatabaseError)?;
+        }
+    
+        if let Some(command_text) = update_cmd.new_command_text {
+            sqlx::query!(
+                r#"
+                UPDATE commands
+                SET command_text = $1, updated_at = $2
+                WHERE name = $3  -- Use name instead of id
+                "#,
+                command_text,
+                Utc::now().naive_utc(),
+                update_cmd.name
+            )
+            .execute(&mut *tx)  // Dereference `tx` here
+            .await
+            .map_err(LiaCoreError::DatabaseError)?;
+        }
+    
+        tx.commit().await.map_err(LiaCoreError::DatabaseError)?;
+        Ok(())
+    }    
 
     pub async fn get_all_commands(&self) -> Result<Vec<Command>, LiaCoreError> {
         let rows = sqlx::query_as!(

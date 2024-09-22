@@ -6,10 +6,7 @@ use std::{
 use system::{Logger, EnvConfig};
 
 use crate::{
-    db::Database,
-    errors::LiaCoreError,
-    models::command::{Command, NewCommand},
-    cmd_engine::CmdEngine,
+    cmd_engine::CmdEngine, db::Database, errors::LiaCoreError, models::command::{Command, NewCommand, UpdateCommand}
 };
 
 pub struct LiaCore {
@@ -48,6 +45,18 @@ impl LiaCore {
             Ok(_) => Ok(Logger::info("Command added successfully.", true)),
             Err(e) => {
                 Logger::error(&format!("Failed to add command: {}", e), true);
+                Err(e)
+            },
+        }
+    }
+
+    pub async fn update_command(&self, cmd: UpdateCommand) -> Result<(), LiaCoreError> {
+        Logger::info(&format!("Updating command: {}", cmd.name), true);
+        let comm = self.db.update_command(cmd).await;
+        match comm {
+            Ok(_) => Ok(Logger::info("Command updated successfully.", true)),
+            Err(e) => {
+                Logger::error(&format!("Failed to update command: {}", e), true);
                 Err(e)
             },
         }

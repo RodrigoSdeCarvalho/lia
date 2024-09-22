@@ -4,7 +4,7 @@ use std::{
 };
 use clap::{Parser, Subcommand, Args, arg};
 
-use lia_core::{LiaCore, models::command::NewCommand};
+use lia_core::{LiaCore, models::command::{NewCommand, UpdateCommand}};
 use system::{Logger, set_process_name, SysConfigs};
 
 #[derive(Parser)]
@@ -19,7 +19,9 @@ enum Commands {
     /// Initializes the database and configurations.
     Init,
     /// Adds a new command to LiA's storage | Example: lia add "ls" "ls -la" --description "List all files" --tags "list,files"
-    Add(AddCommand),
+    Add(CLIAddCommand),
+    /// Updates an existing command.
+    Update(CLIUpdateCommand),
     /// Lists all stored commands.
     List,
     /// Executes a stored command by its name.
@@ -39,7 +41,7 @@ enum Commands {
 }
 
 #[derive(Args)]
-struct AddCommand {
+struct CLIAddCommand {
     /// A unique name for the command.
     name: String,
     /// The command or script to store.
@@ -48,6 +50,21 @@ struct AddCommand {
     #[arg(short, long)]
     description: Option<String>,
     /// Comma-separated tags for categorization.
+    #[arg(short, long)]
+    tags: Option<String>,
+}
+
+#[derive(Args)]
+struct CLIUpdateCommand {
+    /// Name of the command to update.
+    name: String,
+    /// New command text.
+    #[arg(short, long)]
+    command_text: Option<String>,
+    /// New description.
+    #[arg(short, long)]
+    description: Option<String>,
+    /// New tags.
     #[arg(short, long)]
     tags: Option<String>,
 }
@@ -84,6 +101,19 @@ async fn main() {
             match lia_core.add_command(new_cmd).await {
                 Ok(_) => println!("Command added successfully."),
                 Err(e) => println!("Error adding command: {}", e),
+            }
+        }
+        Commands::Update(update_cmd) => {
+            let tags_vec = update_cmd.tags.map(|t| t.split(',').map(|s| s.trim().to_string()).collect());
+            let new_cmd = UpdateCommand {
+                name: update_cmd.name,
+                new_command_text: update_cmd.command_text,
+                new_description: update_cmd.description,
+                new_tags: tags_vec,
+            };
+            match lia_core.update_command(new_cmd).await {
+                Ok(_) => println!("Command updated successfully."),
+                Err(e) => println!("Error updating command: {}", e),
             }
         }
         Commands::List => {
