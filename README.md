@@ -60,4 +60,34 @@ LiA is more than just a tool; it's your personal assistant in the Linux environm
 
 ---
 
+## Coming Soon
+
+- **Search Functionality**: Find your commands quickly by searching through their names, descriptions, or tags.
+
+- **Command Groups**: Organize your commands into profiles or favorites for easier access.
+
+- **Command Chains**: Create sequences of commands to execute in a specific order with a single command.
+
+- **Bash Script Support**: Save and execute bash scripts directly from LiA.
+
+- **CSV Import/Export**: Import and export your commands to and from CSV files for backup or sharing.
+
+- **Command History**: Keep track of the commands you've executed through LiA for reference.
+
+- **Desktop Front-End**: Access LiA through a graphical user interface for a more visual experience.
+
+- **Structured Logging**: Record the execution of commands for auditing or troubleshooting purposes. See the logs in real-time or check them later. All logs will be stored in a structured format for easy analysis via the desktop front-end.
+
+- **Share Commands**: Share your commands with others or import commands shared by the community. Will be available through a web service, accessible via the desktop front-end.
+
+- **Organization Support**:
+  - **Teams**: Collaborate with your team by sharing commands and scripts within a group.
+
+- **AI-Powered Features**:
+  - **Command Prediction**: Predict the command you're likely to use next based on your current context.
+  - **Command Suggestions**: Get recommendations for commands based on your usage patterns or the commands you've saved.
+  - **RAG (Retrieval-Augmented Generation)**: Distributed RAG for generating commands based on your organization's commands and scripts.
+
+---
+
 **Experience the convenience of having all your essential Linux commands at your fingertips with LiA!**
