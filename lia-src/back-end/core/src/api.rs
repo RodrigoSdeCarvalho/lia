@@ -92,6 +92,10 @@ impl LiaCore {
         }
     }
 
+    pub async fn search_commands(&self, query: &str) -> Result<Vec<Command>, LiaCoreError> {
+        self.db.search_commands(query).await
+    }
+
     pub async fn run_command(&self, cmd: Command, path: &Path) -> Result<Output, LiaCoreError> {
         CmdEngine::execute_command(&cmd.command_text, path)
     }

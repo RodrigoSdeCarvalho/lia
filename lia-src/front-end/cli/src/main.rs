@@ -8,7 +8,13 @@ use lia_core::{LiaCore, models::command::{NewCommand, UpdateCommand}};
 use system::{Logger, set_process_name, SysConfigs};
 
 #[derive(Parser)]
-#[command(name = "CLILiA", version = "0.1", author = "Your Name", about = "Linux Assistant CLI")]
+#[command(
+    name = "CLILiA", 
+    version = "0.1", 
+    author = "Your Name", 
+    about = "Linux Assistant CLI",
+    long_about = "LIA (Linux Assistant) helps you store, manage, and execute your frequently used Linux commands and scripts."
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -24,6 +30,11 @@ enum Commands {
     Update(CLIUpdateCommand),
     /// Lists all stored commands.
     List,
+    /// Searches for commands matching the query.
+    Search {
+        /// The search query.
+        query: String,
+    },    
     /// Executes a stored command by its name.
     Run {
         /// Name of the command to execute.
@@ -71,7 +82,7 @@ struct CLIUpdateCommand {
 
 #[tokio::main]
 async fn main() {
-    set_process_name("CLILiA");
+    set_process_name("CLI LiA");
 
     let cli = Cli::parse();
 
@@ -130,6 +141,22 @@ async fn main() {
                 Err(e) => println!("Error retrieving commands: {}", e),
             }
         }
+        Commands::Search { query } => {
+            let commands = match lia_core.search_commands(&query).await {
+                Ok(c) => c,
+                Err(_) => {
+                    println!("Error searching for commands.");
+                    return;
+                }
+            };
+            for cmd in commands {
+                println!("Name: {}", cmd.name);
+                println!("Description: {}", cmd.description.unwrap_or_default());
+                println!("Command: {}", cmd.command_text);
+                println!("Tags: {:?}", cmd.tags.unwrap_or_default());
+                println!("---");
+            }
+        }
         Commands::Run { name } => {
             let path = match std::env::current_dir() {
                 Ok(p) => p,
@@ -154,11 +181,10 @@ async fn main() {
                 }
             };
 
-            if let Ok(_) = lia_core.run_command_stream(cmd, &path, tx).await {
-                handle.join().expect("Failed to join thread");
-            } else {
-                println!("Error running command.");
-            }
+            match lia_core.run_command_stream(cmd, &path, tx).await {
+                Ok(_) => handle.join().expect("Failed to join thread"),
+                Err(_) => println!("Error running command."),
+            };
         }
         Commands::Log { on, off } => {
             let toggle = on || !off;

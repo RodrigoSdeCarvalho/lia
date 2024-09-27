@@ -1,273 +1,320 @@
-# LiA Command-Line Tool Help Guide
+# LiA CLI User Guide
 
-LiA (Linux Assistant) is a command-line tool designed to help you store, manage, and execute your frequently used Linux commands and scripts efficiently.
+LiA (Linux Assistant) is a command-line tool that helps you store, manage, and execute your frequently used Linux commands and scripts.
 
-Below is a guide on how to use each LiA command, with a focus on the `add` command.
+## Table of Contents
+
+- [LiA CLI User Guide](#lia-cli-user-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Commands](#commands)
+      - [`init`](#init)
+      - [`add`](#add)
+      - [`update`](#update)
+      - [`list`](#list)
+      - [`search`](#search)
+      - [`run`](#run)
+      - [`log`](#log)
+    - [Full Examples](#full-examples)
+      - [Adding a Command](#adding-a-command)
+      - [Listing Commands](#listing-commands)
+      - [Searching Commands](#searching-commands)
+      - [Running a Command](#running-a-command)
+  - [Notes](#notes)
 
 ---
 
-## General Usage
+## Installation
 
-```bash
-lia <command> [options]
-```
+To install LiA, follow the steps below:
 
-- Replace `<command>` with one of LiA's available commands.
-- Use `[options]` to pass specific arguments or flags to the command.
+1. **Clone the Repository:**
+
+   ```bash
+   git clone https://github.com/RodrigoSdeCarvalho/lia.git
+   ```
+
+2. **Navigate to the Directory:**
+
+   ```bash
+   cd lia/lia-src
+   ```
+
+3. **Build the Project:**
+
+   ```bash
+   make init
+   make migrate
+   make build
+   ```
+
+   > **Note:**
+   >
+   > Currently, LiA's database only runs on port `5432:5432`. Make sure this port is available on your system. If you have a PostgreSQL server running on this port, you may need to stop it before running LiA. In the future, this port will be configurable.
+
+4. **Install the Binary:**
+
+   ```bash
+   make install
+   ```
 
 ---
 
-## Commands Overview
+## Usage
 
-- **`init`**: Initializes the database and configurations.
-- **`add`**: Adds a new command to LiA's storage.
-- **`list`**: Lists all stored commands.
-- **`run`**: Executes a stored command by name.
+LiA provides several commands to interact with your stored commands and scripts.
 
----
+### Commands
 
-## `init` Command
+#### `init`
 
-**Description**: Sets up LiA by initializing the database and necessary configurations.
+Initializes the database and configurations.
 
-### Usage
+**Usage:**
 
 ```bash
 lia init
 ```
 
-- Starts the Docker container for the database.
-- Runs any required migrations to set up the database schema.
-
-### Example
+**Example:**
 
 ```bash
-lia init
+$ lia init
+Initializing database...
+Database initialized successfully.
 ```
 
 ---
 
-## `add` Command
+#### `add`
 
-**Description**: Adds a new command to LiA's storage for easy access and execution later.
+Adds a new command to LiA's storage.
 
-### Usage
+**Usage:**
 
 ```bash
-lia add <name> <command_text> [options]
+lia add <name> <command_text> [OPTIONS]
 ```
 
-- `<name>`: A unique identifier for your command (e.g., "list_home").
-- `<command_text>`: The actual Linux command or script you want to store.
+- `<name>`: A unique name for the command.
+- `<command_text>`: The command or script to store.
 
-### Options
+**Options:**
 
-- `--description`, `-d`: A brief description of what the command does.
-- `--tags`, `-t`: Comma-separated tags to categorize the command.
+- `-d`, `--description <description>`: (Optional) Description of the command.
+- `-t`, `--tags <tags>`: (Optional) Comma-separated tags for categorization.
 
-### Examples
+**Example:**
 
-1. **Add a simple command**:
-
-   ```bash
-   lia add "list_home" "ls -la ~"
-   ```
-
-   - Adds a command named `list_home` that lists all files in your home directory.
-
-2. **Add a command with a description**:
-
-   ```bash
-   lia add "update_system" "sudo apt-get update && sudo apt-get upgrade -y" --description "Update system packages"
-   ```
-
-   - Adds a command named `update_system` with a description.
-
-3. **Add a command with tags**:
-
-   ```bash
-   lia add "search_logs" "grep 'error' /var/log/syslog" --tags "logs,search"
-   ```
-
-   - Adds a command named `search_logs` and categorizes it with the tags `logs` and `search`.
-
-4. **Add a command with a description and tags**:
-
-   ```bash
-   lia add "backup_home" "tar -czvf backup.tar.gz ~/" --description "Backup home directory" --tags "backup,home"
-   ```
-
-   - Adds a command named `backup_home` with both a description and tags.
-
-### Notes
-
-- **Unique Names**: Each command name must be unique. If you attempt to add a command with a name that already exists, you will receive an error.
-- **Quoting Arguments**: If your command or arguments contain spaces, enclose them in quotes.
-- **Sudo Commands**: When adding commands that require `sudo`, include `sudo` in the `command_text`. You will be prompted for your password upon execution if necessary.
+```bash
+$ lia add "list_files" "ls -la" --description "List all files" --tags "list,files"
+Command added successfully.
+```
 
 ---
 
-## `list` Command
+#### `update`
 
-**Description**: Displays all stored commands along with their details.
+Updates an existing command.
 
-### Usage
+**Usage:**
+
+```bash
+lia update <name> [OPTIONS]
+```
+
+- `<name>`: Name of the command to update.
+
+**Options:**
+
+- `-c`, `--command_text <new_command_text>`: (Optional) New command text.
+- `-d`, `--description <new_description>`: (Optional) New description.
+- `-t`, `--tags <new_tags>`: (Optional) New tags.
+
+**Example:**
+
+```bash
+$ lia update "list_files" --command_text "ls -la /home/user" --description "List all files in home directory"
+Command updated successfully.
+```
+
+---
+
+#### `list`
+
+Lists all stored commands.
+
+**Usage:**
 
 ```bash
 lia list
 ```
 
-### Example
+**Example:**
 
 ```bash
-lia list
-```
-
-**Sample Output**:
-
-```
-Name: list_home
-Description: List all files in your home directory
-Command: ls -la ~
-Tags: []
-
-Name: update_system
-Description: Update system packages
-Command: sudo apt-get update && sudo apt-get upgrade -y
-Tags: []
+$ lia list
+Name: list_files
+Description: List all files
+Command: ls -la
+Tags: ["list", "files"]
+---
+Name: disk_usage
+Description: Check disk usage
+Command: df -h
+Tags: ["disk", "usage"]
+---
 ```
 
 ---
 
-## `run` Command
+#### `search`
 
-**Description**: Executes a stored command by its name.
+Searches for commands matching the query.
 
-### Usage
+**Usage:**
+
+```bash
+lia search <query>
+```
+
+- `<query>`: The search query.
+
+**Example:**
+
+```bash
+$ lia search "disk"
+Name: disk_usage
+Description: Check disk usage
+Command: df -h
+Tags: ["disk", "usage"]
+---
+```
+
+---
+
+#### `run`
+
+Executes a stored command by its name.
+
+**Usage:**
 
 ```bash
 lia run <name>
 ```
 
-- `<name>`: The unique name of the command you wish to execute.
+- `<name>`: Name of the command to execute.
 
-### Example
-
-```bash
-lia run "list_home"
-```
-
-- Executes the command associated with `list_home`.
-
-### Notes
-
-- **Sudo Commands**: If the command requires `sudo` privileges, you may be prompted to enter your password.
-- **Output**: The output of the executed command will be displayed in your terminal.
-
----
-
-## Additional Information
-
-### Viewing Help
-
-For help information about LiA and its commands, use:
+**Example:**
 
 ```bash
-lia --help
+$ lia run "list_files"
+total 64
+drwxr-xr-x  8 user user  4096 Oct  1 12:34 .
+drwxr-xr-x 18 user user  4096 Oct  1 10:20 ..
+-rw-r--r--  1 user user   220 Apr  4  2018 .bash_logout
+-rw-r--r--  1 user user  3771 Apr  4  2018 .bashrc
+...
 ```
 
-Or for a specific command:
+---
+
+#### `log`
+
+Toggles logging on/off. **Note:** Must be run with `sudo`.
+
+**Usage:**
+
+To enable logging:
 
 ```bash
-lia <command> --help
+sudo lia log --on
 ```
 
-### Example
+To disable logging:
 
 ```bash
-lia add --help
+sudo lia log --off
 ```
 
-**Sample Output**:
+**Options:**
 
-```
-Usage: lia add <name> <command_text> [OPTIONS]
+- `--on`: Enable logging.
+- `--off`: Disable logging.
 
-Adds a new command to LiA's storage.
+**Example:**
 
-Arguments:
-  <name>          A unique name for the command
-  <command_text>  The command or script to store
-
-Options:
-  -d, --description <DESCRIPTION>  Description of the command
-  -t, --tags <TAGS>                Comma-separated tags for categorization
-  -h, --help                       Print help information
+```bash
+$ sudo lia log --on
+Logging turned on
 ```
 
 ---
 
-## Tips for Using LiA
+### Full Examples
 
-- **Meaningful Names**: Use descriptive names for your commands to make them easy to remember.
-- **Organize with Tags**: Categorize your commands with tags for easier searching and management in future updates of LiA.
-- **Descriptions**: Providing a description helps you recall the purpose of each command, especially if you have many stored.
-- **Regular Updates**: Keep your stored commands up to date, especially if they involve paths or resources that may change.
+#### Adding a Command
+
+**Command:**
+
+```bash
+$ lia add "check_updates" "sudo apt update && sudo apt upgrade -y" --description "Update system packages" --tags "update,upgrade"
+Command added successfully.
+```
+
+#### Listing Commands
+
+**Command:**
+
+```bash
+$ lia list
+Name: check_updates
+Description: Update system packages
+Command: sudo apt update && sudo apt upgrade -y
+Tags: ["update", "upgrade"]
+---
+Name: list_files
+Description: List all files
+Command: ls -la
+Tags: ["list", "files"]
+---
+```
+
+#### Searching Commands
+
+**Command:**
+
+```bash
+$ lia search "update"
+Name: check_updates
+Description: Update system packages
+Command: sudo apt update && sudo apt upgrade -y
+Tags: ["update", "upgrade"]
+---
+```
+
+#### Running a Command
+
+**Command:**
+
+```bash
+$ sudo lia run "check_updates"
+[sudo] password for user:
+Hit:1 http://archive.ubuntu.com/ubuntu focal InRelease
+Get:2 http://archive.ubuntu.com/ubuntu focal-updates InRelease [114 kB]
+...
+```
 
 ---
 
-## Example Workflow
+## Notes
 
-1. **Initialize LiA**:
-
-   ```bash
-   lia init
-   ```
-
-2. **Add a Command**:
-
-   ```bash
-   lia add "greet" "echo 'Hello, World!'" --description "Greet the world"
-   ```
-
-3. **List Commands**:
-
-   ```bash
-   lia list
-   ```
-
-4. **Run a Command**:
-
-   ```bash
-   lia run "greet"
-   ```
-
-   **Output**:
-
-   ```
-   Hello, World!
-   ```
+- Ensure you have initialized the database before using other commands by running `lia init`.
+- When using `lia run`, the output of the stored command will be displayed in real-time.
+- Use `sudo` when necessary, especially for commands that require elevated permissions.
+- Tags are useful for categorizing and searching through your stored commands.
 
 ---
 
-## Troubleshooting
-
-- **Command Not Found**: If you receive an error stating that a command was not found, ensure that you have added it correctly and that you're using the correct name.
-- **Permission Denied**: If you encounter permission issues when running commands, check if `sudo` is required and included in your `command_text`.
-- **Docker Issues**: Since LiA relies on Docker for the database, ensure Docker is installed and running on your system.
-
----
-
-## Getting Help
-
-If you need further assistance or encounter issues:
-
-- **Check the Documentation**: Review the help information provided by the `--help` flag.
-- **Update LiA**: Ensure you are using the latest version of LiA.
-- **Contact Support**: Reach out to the maintainers or community for support.
-
----
-
-By understanding and utilizing the commands and options available in LiA, especially the `add` command, you can significantly enhance your productivity and streamline your command-line workflows.
-
-Feel free to explore and customize LiA to best suit your needs!
+**Experience the convenience of having all your essential Linux commands at your fingertips with LiA!**

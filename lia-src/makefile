@@ -17,6 +17,12 @@ down:
 	docker-compose down
 	@echo "Database stopped."
 
+migrate:
+	@echo "Running migrations..."
+	cd back-end && sqlx migrate run
+	cd ..
+	@echo "Migrations complete."
+
 build:
 	@echo "Building lia..."
 	cargo build --release

@@ -171,4 +171,23 @@ impl Database {
             Err(e) => Err(LiaCoreError::DatabaseError(e)),
         }
     }
+
+    pub async fn search_commands(&self, query: &str) -> Result<Vec<Command>, LiaCoreError> {
+        let search_query = format!("{}:*", query.replace(" ", " & "));
+        let commands = sqlx::query_as!(
+            Command,
+            r#"
+            SELECT id, name, description, command_text, tags, created_at, updated_at
+            FROM commands
+            WHERE search_vector @@ to_tsquery('english', $1)
+            ORDER BY ts_rank(search_vector, to_tsquery('english', $1)) DESC
+            "#,
+            search_query
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(LiaCoreError::DatabaseError)?;
+
+        Ok(commands)
+    }
 }
