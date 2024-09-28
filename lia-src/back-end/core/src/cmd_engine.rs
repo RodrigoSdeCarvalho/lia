@@ -1,10 +1,10 @@
 use crate::errors::LiaCoreError;
 use std::{
-    process::{Command, Output, Stdio},
-    io::{BufReader, BufRead},
-    sync::mpsc::Sender,
-    path::Path,
+    io::{BufRead, BufReader}, path::Path, process::{Command, Output, Stdio}, sync::mpsc::Sender
 };
+
+#[cfg(target_os = "linux")]
+use libc;
 
 pub struct CmdEngine;
 
@@ -83,5 +83,20 @@ impl CmdEngine {
                 status.code().unwrap_or(-1)
             )))
         }
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn is_sudo_user() -> Result<bool, LiaCoreError> {
+        let euid = unsafe { libc::geteuid() };
+        if euid == 0 {
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    pub fn is_sudo_user() -> Result<bool, LiaCoreError> {
+        Ok(false)
     }
 }

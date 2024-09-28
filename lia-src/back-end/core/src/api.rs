@@ -108,4 +108,8 @@ impl LiaCore {
     ) -> Result<(), LiaCoreError> {
         CmdEngine::execute_command_stream(&cmd.command_text, path, output_tx)
     }
+
+    pub fn is_sudo_user() -> Result<bool, LiaCoreError> {
+        CmdEngine::is_sudo_user() 
+    }
 }

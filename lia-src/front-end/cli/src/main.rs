@@ -187,8 +187,19 @@ async fn main() {
             };
         }
         Commands::Log { on, off } => {
-            let toggle = on || !off;
+            let is_root = match LiaCore::is_sudo_user() {
+                Ok(r) => r,
+                Err(_) => {
+                    println!("Error checking if user is root.");
+                    return;
+                }
+            };
+            if !is_root {
+                println!("This command must be run with sudo.");
+                return;
+            }
 
+            let toggle = on || !off;
             SysConfigs::set_log(toggle, false, None);
             println!("Logging turned {}", if toggle { "on" } else { "off" });
         }
