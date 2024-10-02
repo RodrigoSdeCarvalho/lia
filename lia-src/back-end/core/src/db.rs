@@ -253,4 +253,132 @@ impl Database {
 
         Ok(commands)
     }
+
+    pub async fn find_commands_for_deletion(
+        &self,
+        name: Option<String>,
+        tags: Option<Vec<String>>,
+    ) -> Result<Vec<Command>, LiaCoreError> {
+        match (name, tags) {
+            (Some(name), Some(tags_vec)) => {
+                // Both name and tags are provided
+                sqlx::query_as!(
+                    Command,
+                    r#"
+                    SELECT id, name, description, command_text, tags, created_at, updated_at
+                    FROM commands
+                    WHERE
+                        name = $1
+                        AND tags && $2::text[]
+                    "#,
+                    name,
+                    &tags_vec,
+                )
+                .fetch_all(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)
+            }
+            (Some(name), None) => {
+                // Only name is provided
+                sqlx::query_as!(
+                    Command,
+                    r#"
+                    SELECT id, name, description, command_text, tags, created_at, updated_at
+                    FROM commands
+                    WHERE
+                        name = $1
+                    "#,
+                    name,
+                )
+                .fetch_all(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)
+            }
+            (None, Some(tags_vec)) => {
+                // Only tags are provided
+                sqlx::query_as!(
+                    Command,
+                    r#"
+                    SELECT id, name, description, command_text, tags, created_at, updated_at
+                    FROM commands
+                    WHERE
+                        tags && $1::text[]
+                    "#,
+                    &tags_vec,
+                )
+                .fetch_all(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)
+            }
+            (None, None) => {
+                // Should not reach here as we check for at least one parameter in CLI
+                Ok(vec![])
+            }
+        }
+    }
+
+    pub async fn delete_commands(
+        &self,
+        name: Option<String>,
+        tags: Option<Vec<String>>,
+    ) -> Result<(), LiaCoreError> {
+        match (name, tags) {
+            (Some(name), Some(tags_vec)) => {
+                // Both name and tags are provided
+                sqlx::query!(
+                    r#"
+                    DELETE FROM commands
+                    WHERE
+                        name = $1
+                        AND tags && $2::text[]
+                    "#,
+                    name,
+                    &tags_vec,
+                )
+                .execute(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)?;
+            }
+            (Some(name), None) => {
+                // Only name is provided
+                sqlx::query!(
+                    r#"
+                    DELETE FROM commands
+                    WHERE
+                        name = $1
+                    "#,
+                    name,
+                )
+                .execute(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)?;
+            }
+            (None, Some(tags_vec)) => {
+                // Only tags are provided
+                sqlx::query!(
+                    r#"
+                    DELETE FROM commands
+                    WHERE
+                        tags && $1::text[]
+                    "#,
+                    &tags_vec,
+                )
+                .execute(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)?;
+            }
+            (None, None) => {
+                // Should not reach here as we check for at least one parameter in CLI
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn delete_all_commands(&self) -> Result<(), LiaCoreError> {
+        sqlx::query!("DELETE FROM commands")
+            .execute(&self.pool)
+            .await
+            .map_err(LiaCoreError::DatabaseError)?;
+        Ok(())
+    }
 }

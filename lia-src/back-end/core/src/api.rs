@@ -115,4 +115,24 @@ impl LiaCore {
     pub fn is_sudo_user() -> bool {
         CmdEngine::is_sudo_user() 
     }
+
+    pub async fn find_commands_for_deletion(
+        &self,
+        name: Option<String>,
+        tags: Option<Vec<String>>,
+    ) -> Result<Vec<Command>, LiaCoreError> {
+        self.db.find_commands_for_deletion(name, tags).await
+    }
+
+    pub async fn delete_commands(
+        &self,
+        name: Option<String>,
+        tags: Option<Vec<String>>,
+    ) -> Result<(), LiaCoreError> {
+        self.db.delete_commands(name, tags).await
+    }
+
+    pub async fn delete_all_commands(&self) -> Result<(), LiaCoreError> {
+        self.db.delete_all_commands().await
+    }
 }

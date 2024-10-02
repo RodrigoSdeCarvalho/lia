@@ -1,6 +1,8 @@
 # LiA CLI User Guide
 
-LiA (Linux Assistant) is a command-line tool that helps you store, manage, and execute your frequently used Linux commands and scripts.
+LiA (Linux Assistant) is a command-line tool that helps you store, manage, and execute your frequently used Linux commands and scripts. With LiA, you can organize your commands with names, descriptions, and tags, making it easy to search and execute them whenever needed.
+
+---
 
 ## Table of Contents
 
@@ -15,12 +17,14 @@ LiA (Linux Assistant) is a command-line tool that helps you store, manage, and e
       - [`list`](#list)
       - [`search`](#search)
       - [`run`](#run)
+      - [`delete`](#delete)
       - [`log`](#log)
-    - [Full Examples](#full-examples)
+    - [Examples](#examples)
       - [Adding a Command](#adding-a-command)
       - [Listing Commands](#listing-commands)
       - [Searching Commands](#searching-commands)
       - [Running a Command](#running-a-command)
+      - [Deleting a Command](#deleting-a-command)
   - [Notes](#notes)
 
 ---
@@ -51,7 +55,7 @@ To install LiA, follow the steps below:
 
    > **Note:**
    >
-   > Currently, LiA's database only runs on port `5432:5432`. Make sure this port is available on your system. If you have a PostgreSQL server running on this port, you may need to stop it before running LiA. In the future, this port will be configurable.
+   > Currently, LiA's database runs on port `5432`. Ensure this port is available on your system. If you have a PostgreSQL server running on this port, you may need to stop it before running LiA. In future versions, this port will be configurable.
 
 4. **Install the Binary:**
 
@@ -130,12 +134,12 @@ lia update <name> [OPTIONS]
 
 - `-c`, `--command_text <new_command_text>`: (Optional) New command text.
 - `-d`, `--description <new_description>`: (Optional) New description.
-- `-t`, `--tags <new_tags>`: (Optional) New tags.
+- `-t`, `--tags <new_tags>`: (Optional) New tags (comma-separated).
 
 **Example:**
 
 ```bash
-$ lia update "list_files" --command_text "ls -la /home/user" --description "List all files in home directory"
+$ lia update "list_files" --command_text "ls -la /home/user" --description "List all files in home directory" --tags "list,files,home"
 Command updated successfully.
 ```
 
@@ -155,15 +159,15 @@ lia list
 
 ```bash
 $ lia list
+Name: check_updates
+Description: Update system packages
+Command: sudo apt update && sudo apt upgrade -y
+Tags: ["update", "upgrade"]
+---
 Name: list_files
 Description: List all files
 Command: ls -la
 Tags: ["list", "files"]
----
-Name: disk_usage
-Description: Check disk usage
-Command: df -h
-Tags: ["disk", "usage"]
 ---
 ```
 
@@ -171,26 +175,74 @@ Tags: ["disk", "usage"]
 
 #### `search`
 
-Searches for commands matching the query.
+Searches for commands matching an optional query and/or tags.
 
 **Usage:**
 
 ```bash
-lia search <query>
+lia search [OPTIONS]
 ```
 
-- `<query>`: The search query.
+**Options:**
 
-**Example:**
+- `-q`, `--query <query>`: (Optional) The search query.
+- `-t`, `--tags <tags>`: (Optional) Comma-separated tags to filter by.
 
-```bash
-$ lia search "disk"
-Name: disk_usage
-Description: Check disk usage
-Command: df -h
-Tags: ["disk", "usage"]
----
-```
+**Notes:**
+
+- You can search by query, tags, both, or neither.
+- If no query or tags are provided, all commands are returned.
+
+**Examples:**
+
+1. **Search by Query Only:**
+
+   ```bash
+   $ lia search --query "update"
+   Name: check_updates
+   Description: Update system packages
+   Command: sudo apt update && sudo apt upgrade -y
+   Tags: ["update", "upgrade"]
+   ---
+   ```
+
+2. **Search by Tags Only:**
+
+   ```bash
+   $ lia search --tags "files"
+   Name: list_files
+   Description: List all files
+   Command: ls -la
+   Tags: ["list", "files"]
+   ---
+   ```
+
+3. **Search by Query and Tags:**
+
+   ```bash
+   $ lia search --query "list" --tags "home"
+   Name: list_files
+   Description: List all files in home directory
+   Command: ls -la /home/user
+   Tags: ["list", "files", "home"]
+   ---
+   ```
+
+4. **Search with Neither Query nor Tags:**
+
+   ```bash
+   $ lia search
+   Name: check_updates
+   Description: Update system packages
+   Command: sudo apt update && sudo apt upgrade -y
+   Tags: ["update", "upgrade"]
+   ---
+   Name: list_files
+   Description: List all files
+   Command: ls -la
+   Tags: ["list", "files"]
+   ---
+   ```
 
 ---
 
@@ -201,22 +253,94 @@ Executes a stored command by its name.
 **Usage:**
 
 ```bash
-lia run <name>
+lia run <name> [OPTIONS]
 ```
 
 - `<name>`: Name of the command to execute.
 
+**Options:**
+
+- `-p`, `--path <path>`: (Optional) The path where the command should be executed. Defaults to the current directory.
+
 **Example:**
 
 ```bash
-$ lia run "list_files"
+$ lia run "list_files" --path "/var/log"
 total 64
-drwxr-xr-x  8 user user  4096 Oct  1 12:34 .
-drwxr-xr-x 18 user user  4096 Oct  1 10:20 ..
--rw-r--r--  1 user user   220 Apr  4  2018 .bash_logout
--rw-r--r--  1 user user  3771 Apr  4  2018 .bashrc
+drwxr-xr-x  8 root root  4096 Oct  1 12:34 .
+drwxr-xr-x 18 root root  4096 Oct  1 10:20 ..
+-rw-r--r--  1 root root   220 Apr  4  2018 logfile.log
 ...
 ```
+
+**Notes:**
+
+- If the command requires `sudo`, run LiA with `sudo`:
+
+  ```bash
+  sudo lia run "check_updates"
+  ```
+
+---
+
+#### `delete`
+
+Deletes commands by name or tags, with confirmation.
+
+**Usage:**
+
+```bash
+lia delete [OPTIONS]
+```
+
+**Options:**
+
+- `-n`, `--name <name>`: (Optional) Name of the command to delete.
+- `-t`, `--tags <tags>`: (Optional) Comma-separated tags to filter commands for deletion.
+- `--all`: (Optional) Delete all commands.
+
+**Notes:**
+
+- At least one of `--name` or `--tags` or `all` must be provided.
+- LiA will display the commands that match the criteria and ask for confirmation before deletion. Unless `--all` is used, in which case all commands will be deleted.
+
+**Examples:**
+
+1. **Delete by Name:**
+
+   ```bash
+   $ lia delete --name "list_files"
+   The following commands will be deleted:
+   Name: list_files
+   Description: List all files
+   Command: ls -la
+   Tags: ["list", "files"]
+   ---
+   Are you sure you want to delete these commands? [y/N] y
+   Commands deleted successfully.
+   ```
+
+2. **Delete by Tags:**
+
+   ```bash
+   $ lia delete --tags "update"
+   The following commands will be deleted:
+   Name: check_updates
+   Description: Update system packages
+   Command: sudo apt update && sudo apt upgrade -y
+   Tags: ["update", "upgrade"]
+   ---
+   Are you sure you want to delete these commands? [y/N] n
+   Deletion cancelled.
+   ```
+
+3. **Delete All Commands:**
+
+   ```bash
+   $ lia delete --all
+   Are you sure you want to delete all commands? [y/N] y
+   All commands deleted successfully.
+   ```
 
 ---
 
@@ -252,7 +376,7 @@ Logging turned on
 
 ---
 
-### Full Examples
+### Examples
 
 #### Adding a Command
 
@@ -262,6 +386,8 @@ Logging turned on
 $ lia add "check_updates" "sudo apt update && sudo apt upgrade -y" --description "Update system packages" --tags "update,upgrade"
 Command added successfully.
 ```
+
+---
 
 #### Listing Commands
 
@@ -281,40 +407,127 @@ Tags: ["list", "files"]
 ---
 ```
 
+---
+
 #### Searching Commands
 
-**Command:**
+1. **Search by Query:**
 
-```bash
-$ lia search "update"
-Name: check_updates
-Description: Update system packages
-Command: sudo apt update && sudo apt upgrade -y
-Tags: ["update", "upgrade"]
+   ```bash
+   $ lia search --query "update"
+   Name: check_updates
+   Description: Update system packages
+   Command: sudo apt update && sudo apt upgrade -y
+   Tags: ["update", "upgrade"]
+   ---
+   ```
+
+2. **Search by Tags:**
+
+   ```bash
+   $ lia search --tags "files"
+   Name: list_files
+   Description: List all files
+   Command: ls -la
+   Tags: ["list", "files"]
+   ---
+   ```
+
+3. **Search by Query and Tags:**
+
+   ```bash
+   $ lia search --query "list" --tags "home"
+   Name: list_files
+   Description: List all files in home directory
+   Command: ls -la /home/user
+   Tags: ["list", "files", "home"]
+   ---
+   ```
+
 ---
-```
 
 #### Running a Command
 
 **Command:**
 
 ```bash
-$ sudo lia run "check_updates"
-[sudo] password for user:
-Hit:1 http://archive.ubuntu.com/ubuntu focal InRelease
-Get:2 http://archive.ubuntu.com/ubuntu focal-updates InRelease [114 kB]
+$ lia run "list_files" --path "/var/log"
+total 64
+drwxr-xr-x  8 root root  4096 Oct  1 12:34 .
+drwxr-xr-x 18 root root  4096 Oct  1 10:20 ..
+-rw-r--r--  1 root root   220 Apr  4  2018 logfile.log
 ...
 ```
 
 ---
 
+#### Deleting a Command
+
+1. **Delete by Name:**
+
+   ```bash
+   $ lia delete --name "list_files"
+   The following commands will be deleted:
+   Name: list_files
+   Description: List all files
+   Command: ls -la
+   Tags: ["list", "files"]
+   ---
+   Are you sure you want to delete these commands? [y/N] y
+   Commands deleted successfully.
+   ```
+
+2. **Delete by Tags:**
+
+   ```bash
+   $ lia delete --tags "update"
+   The following commands will be deleted:
+   Name: check_updates
+   Description: Update system packages
+   Command: sudo apt update && sudo apt upgrade -y
+   Tags: ["update", "upgrade"]
+   ---
+   Are you sure you want to delete these commands? [y/N] n
+   Deletion cancelled.
+   ```
+
+---
+
 ## Notes
 
-- Ensure you have initialized the database before using other commands by running `lia init`.
-- When using `lia run`, the output of the stored command will be displayed in real-time.
-- Use `sudo` when necessary, especially for commands that require elevated permissions.
-- Tags are useful for categorizing and searching through your stored commands.
+- **Initialization:**
+  - Ensure you have initialized the database before using other commands by running `lia init`.
+
+- **Running Commands:**
+  - When using `lia run`, the output of the stored command will be displayed in real-time.
+  - Use `sudo` when necessary, especially for commands that require elevated permissions.
+
+- **Tags:**
+  - Tags are useful for categorizing and searching through your stored commands.
+  - You can assign multiple tags to a command by separating them with commas.
+
+- **Searching:**
+  - The `search` command is flexible—you can search by query, tags, both, or neither.
+  - Searching without any parameters will list all commands.
+
+- **Deleting Commands:**
+  - The `delete` command requires confirmation before deleting any commands.
+  - Be cautious when deleting commands, especially when using tags that may match multiple commands.
+
+- **Logging:**
+  - Logging can be toggled on or off using the `log` command.
+  - Remember to run `lia log` with `sudo` privileges.
 
 ---
 
 **Experience the convenience of having all your essential Linux commands at your fingertips with LiA!**
+
+---
+
+**Feedback and Contributions:**
+
+- If you encounter any issues or have suggestions for improvements, feel free to open an issue or contribute to the project on GitHub: [https://github.com/RodrigoSdeCarvalho/lia](https://github.com/RodrigoSdeCarvalho/lia)
+
+---
+
+**Enjoy using LiA to enhance your Linux command-line productivity!**

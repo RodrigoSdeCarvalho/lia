@@ -5,7 +5,8 @@ use std::{
 use clap::{Parser, Subcommand, Args, arg};
 
 use lia_core::{
-    LiaCore, 
+    LiaCore,
+    errors::LiaCoreError,
     models::command::{NewCommand, UpdateCommand}
 };
 use system::{Logger, set_process_name, SysConfigs};
@@ -47,6 +48,20 @@ enum Commands {
     Run {
         /// Name of the command to execute.
         name: String,
+    },
+    /// Deletes commands by name or tags.
+    Delete {
+        /// Name of the command to delete.
+        #[arg(short, long)]
+        name: Option<String>,
+
+        /// Tags to filter commands for deletion (comma-separated).
+        #[arg(short, long)]
+        tags: Option<String>,
+
+        /// Flag to indicate deletion of all commands.
+        #[arg(long)]
+        all: bool,
     },
     /// Toggle logging on/off. Must be run with sudo.
     Log {
@@ -201,6 +216,89 @@ async fn main() {
                 Ok(_) => handle.join().expect("Failed to join thread"),
                 Err(_) => println!("Error running command."),
             };
+        }
+        Commands::Delete { name, tags , all} => {
+            if name.is_none() && tags.is_none() && !all {
+                eprintln!("Error: You must provide either a name or tags to delete commands.");
+                return;
+            } else if all {
+                println!("Are you sure you want to delete all commands? [y/N]");
+                let mut input = String::new();
+                match std::io::stdin().read_line(&mut input).map_err(LiaCoreError::IoError) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        println!("Error reading input: {}", e);
+                        return;
+                    }
+                }
+                let input = input.trim().to_lowercase();
+
+                if input == "y" || input == "yes" {
+                    match lia_core.delete_all_commands().await {
+                        Ok(_) => (),
+                        Err(_) => {
+                            println!("Error deleting commands.");
+                            return;
+                        }
+                    }
+                    println!("All commands deleted successfully.");
+                } else {
+                    println!("Deletion cancelled.");
+                }
+                return;
+            }
+
+            let tags_vec = tags.map(|t| {
+                t.split(',')
+                    .map(|s| s.trim().to_string())
+                    .collect::<Vec<String>>()
+            });
+
+            let commands_to_delete = match lia_core.find_commands_for_deletion(name.clone(), tags_vec.clone()).await {
+                Ok(c) => c,
+                Err(_) => {
+                    println!("Error finding commands for deletion.");
+                    return;
+                }
+            }; 
+
+            if commands_to_delete.is_empty() {
+                println!("No commands found matching the criteria for deletion.");
+                return;
+            }
+
+            println!("The following commands will be deleted:");
+            for cmd in &commands_to_delete {
+                println!("Name: {}", cmd.name);
+                println!("Description: {}", cmd.description.clone().unwrap_or_default());
+                println!("Command: {}", cmd.command_text);
+                println!("Tags: {:?}", cmd.tags.clone().unwrap_or_default());
+                println!("---");
+            }
+
+            println!("Are you sure you want to delete these commands? [y/N]");
+            let mut input = String::new();
+            match std::io::stdin().read_line(&mut input).map_err(LiaCoreError::IoError) {
+                Ok(_) => (),
+                Err(e) => {
+                    println!("Error reading input: {}", e);
+                    return;
+                }
+            }
+            let input = input.trim().to_lowercase();
+
+            if input == "y" || input == "yes" {
+                match lia_core.delete_commands(name, tags_vec).await {
+                    Ok(_) => (),
+                    Err(_) => {
+                        println!("Error deleting commands.");
+                        return;
+                    }
+                }
+                println!("Commands deleted successfully.");
+            } else {
+                println!("Deletion cancelled.");
+            }
         }
         Commands::Log { on, off } => {
             let is_root = LiaCore::is_sudo_user();
