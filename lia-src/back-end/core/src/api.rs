@@ -65,9 +65,9 @@ impl LiaCore {
         }
     }
 
-    pub async fn get_all_commands(&self) -> Result<Vec<Command>, LiaCoreError> {
+    pub async fn get_all_commands(&self, limit: i64, offset: i64) -> Result<Vec<Command>, LiaCoreError> {
         Logger::info("Getting all commands.", true);
-        let comms = self.db.get_all_commands().await;
+        let comms = self.db.get_all_commands(limit, offset).await;
         match comms {
             Ok(commands) => {
                 Logger::info("Commands retrieved successfully. \n", true);
@@ -95,8 +95,8 @@ impl LiaCore {
         }
     }
 
-    pub async fn search_commands(&self, query: &str, tags: Option<Vec<String>>) -> Result<Vec<Command>, LiaCoreError> {
-        self.db.search_commands(query, tags).await
+    pub async fn search_commands(&self, query: &str, tags: Option<Vec<String>>, limit: i64, offset: i64) -> Result<Vec<Command>, LiaCoreError> {
+        self.db.search_commands(query, tags, limit, offset).await
     }
 
     pub async fn run_command(&self, cmd: Command, path: &Path) -> Result<Output, LiaCoreError> {

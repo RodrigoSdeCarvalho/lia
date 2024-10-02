@@ -139,14 +139,17 @@ impl Database {
         Ok(())
     }    
 
-    pub async fn get_all_commands(&self) -> Result<Vec<Command>, LiaCoreError> {
+    pub async fn get_all_commands(&self, limit: i64, offset: i64) -> Result<Vec<Command>, LiaCoreError> {
         let rows = sqlx::query_as!(
             Command,
             r#"
             SELECT id, name, description, command_text, tags, created_at, updated_at
             FROM commands
             ORDER BY name
-            "#
+            LIMIT $1 OFFSET $2
+            "#,
+            limit,
+            offset
         )
         .fetch_all(&self.pool)
         .await
@@ -178,13 +181,15 @@ impl Database {
         &self,
         query: &str,
         tags: Option<Vec<String>>,
+        limit: i64,
+        offset: i64,
     ) -> Result<Vec<Command>, LiaCoreError> {
         let search_query = if !query.is_empty() {
             Some(format!("{}:*", query.replace(" ", " & ")))
         } else {
             None
         };
-
+    
         let commands = match (search_query, tags) {
             (Some(sq), Some(tags_vec)) => {
                 sqlx::query_as!(
@@ -196,9 +201,12 @@ impl Database {
                         search_vector @@ to_tsquery('english', $1)
                         AND tags && $2::text[]
                     ORDER BY ts_rank(search_vector, to_tsquery('english', $1)) DESC
+                    LIMIT $3 OFFSET $4
                     "#,
                     sq,
                     &tags_vec,
+                    limit,
+                    offset
                 )
                 .fetch_all(&self.pool)
                 .await
@@ -213,8 +221,11 @@ impl Database {
                     WHERE
                         search_vector @@ to_tsquery('english', $1)
                     ORDER BY ts_rank(search_vector, to_tsquery('english', $1)) DESC
+                    LIMIT $2 OFFSET $3
                     "#,
                     sq,
+                    limit,
+                    offset
                 )
                 .fetch_all(&self.pool)
                 .await
@@ -229,8 +240,11 @@ impl Database {
                     WHERE
                         tags && $1::text[]
                     ORDER BY name
+                    LIMIT $2 OFFSET $3
                     "#,
                     &tags_vec,
+                    limit,
+                    offset
                 )
                 .fetch_all(&self.pool)
                 .await
@@ -243,16 +257,18 @@ impl Database {
                     SELECT id, name, description, command_text, tags, created_at, updated_at
                     FROM commands
                     ORDER BY name
+                    LIMIT $1 OFFSET $2
                     "#,
+                    limit,
+                    offset
                 )
                 .fetch_all(&self.pool)
                 .await
                 .map_err(LiaCoreError::DatabaseError)?
             }
         };
-
         Ok(commands)
-    }
+    }    
 
     pub async fn find_commands_for_deletion(
         &self,

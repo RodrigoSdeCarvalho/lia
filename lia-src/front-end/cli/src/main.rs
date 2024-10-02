@@ -1,13 +1,21 @@
 use std::{
+    io::{stdout, Write},
     sync::mpsc::channel,
     thread,
 };
+
 use clap::{Parser, Subcommand, Args, arg};
+use crossterm::{
+    cursor::{Hide, MoveTo, Show},
+    event::{self, Event, KeyCode, KeyEvent},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
+};
 
 use lia_core::{
     LiaCore,
     errors::LiaCoreError,
-    models::command::{NewCommand, UpdateCommand}
+    models::command::{NewCommand, UpdateCommand, Command}
 };
 use system::{Logger, set_process_name, SysConfigs};
 
@@ -33,7 +41,11 @@ enum Commands {
     /// Updates an existing command.
     Update(CLIUpdateCommand),
     /// Lists all stored commands.
-    List,
+    List {
+        /// The maximum number of commands to display.
+        #[arg(short, long, default_value = "100")]
+        limit: i64,
+    },
     /// Searches for commands matching the query.
     Search {
         /// The search query.
@@ -43,6 +55,10 @@ enum Commands {
         /// Tags to filter by (comma-separated).
         #[arg(short, long)]
         tags: Option<String>,
+
+        /// The maximum number of results to display.
+        #[arg(short, long, default_value = "10")]
+        limit: i64,
     },    
     /// Executes a stored command by its name.
     Run {
@@ -150,21 +166,15 @@ async fn main() {
                 Err(e) => println!("Error updating command: {}", e),
             }
         }
-        Commands::List => {
-            match lia_core.get_all_commands().await {
+        Commands::List { limit } => {
+            match lia_core.get_all_commands(limit, 0).await {
                 Ok(commands) => {
-                    for cmd in commands {
-                        println!("Name: {}", cmd.name);
-                        println!("Description: {}", cmd.description.unwrap_or_default());
-                        println!("Command: {}", cmd.command_text);
-                        println!("Tags: {:?}", cmd.tags.unwrap_or_default());
-                        println!("---");
-                    }
+                    display_commands_paginated(commands);
                 }
                 Err(e) => println!("Error retrieving commands: {}", e),
             }
         }
-        Commands::Search { query, tags } => {
+        Commands::Search { query, tags, limit } => {
             let tags_vec = tags.map(|t| {
                 t.split(',')
                     .map(|s| s.trim().to_string())
@@ -173,20 +183,14 @@ async fn main() {
 
             let query = query.unwrap_or_default();
 
-            let commands = match lia_core.search_commands(&query, tags_vec).await {
+            let commands = match lia_core.search_commands(&query, tags_vec, limit, 0).await {
                 Ok(c) => c,
                 Err(_) => {
                     println!("Error searching for commands.");
                     return;
                 }
             };
-            for cmd in commands {
-                println!("Name: {}", cmd.name);
-                println!("Description: {}", cmd.description.unwrap_or_default());
-                println!("Command: {}", cmd.command_text);
-                println!("Tags: {:?}", cmd.tags.unwrap_or_default());
-                println!("---");
-            }
+            display_commands_paginated(commands);
         }
         Commands::Run { name } => {
             let path = match std::env::current_dir() {
@@ -311,5 +315,129 @@ async fn main() {
             SysConfigs::set_log(toggle, false, None);
             println!("Logging turned {}", if toggle { "on" } else { "off" });
         }
+    }
+}
+
+fn display_commands_paginated(commands: Vec<Command>) {
+    const PAGE_SIZE: usize = 10;
+    let mut current_page: usize = 0;
+    let mut display = true;
+    let total_pages = if commands.is_empty() {
+        1
+    } else {
+        (commands.len() + PAGE_SIZE - 1) / PAGE_SIZE
+    };
+
+    if let Err(e) = enable_raw_mode() {
+        eprintln!("Error enabling raw mode: {}", e);
+        return;
+    }
+
+    let mut stdout = stdout();
+    if let Err(e) = execute!(stdout, Hide) {
+        eprintln!("Error hiding cursor: {}", e);
+    }
+
+    loop {
+        if display{
+            let start = current_page * PAGE_SIZE;
+            let end = std::cmp::min(start + PAGE_SIZE, commands.len());
+            let current_commands = &commands[start..end];
+
+            for (i, cmd) in current_commands.iter().enumerate() {
+                let command_number = start + i + 1;
+
+                if let Err(e) = write!(stdout, "Command {}\r\n", command_number) {
+                    eprintln!("Error writing to stdout: {}", e);
+                    break;
+                }
+                if let Err(e) = write!(stdout, "Name: {}\r\n", cmd.name) {
+                    eprintln!("Error writing to stdout: {}", e);
+                    break;
+                }
+                if let Err(e) = write!(
+                    stdout,
+                    "Description: {}\r\n",
+                    cmd.description.clone().unwrap_or_default()
+                ) {
+                    eprintln!("Error writing to stdout: {}", e);
+                    break;
+                }
+                if let Err(e) = write!(stdout, "Command: {}\r\n", cmd.command_text) {
+                    eprintln!("Error writing to stdout: {}", e);
+                    break;
+                }
+                let tags: Vec<String> = cmd
+                    .tags
+                    .clone()
+                    .unwrap_or_default()
+                    .iter()
+                    .map(|tag| tag.clone())
+                    .collect();
+                if let Err(e) = write!(stdout, "Tags: {:?}\r\n", tags) {
+                    eprintln!("Error writing to stdout: {}", e);
+                    break;
+                }
+                if let Err(e) = write!(stdout, "---\r\n") {
+                    eprintln!("Error writing to stdout: {}", e);
+                    break;
+                }
+            }
+
+            if let Err(e) = write!(stdout, "Page {}/{}\r\n", current_page + 1, total_pages) {
+                eprintln!("Error writing to stdout: {}", e);
+                break;
+            }
+            if let Err(e) = write!(
+                stdout,
+                "Use Up/Down arrows to navigate, 'q' to quit.\r\n"
+            ) {
+                eprintln!("Error writing to stdout: {}", e);
+                break;
+            }
+            if let Err(e) = write!(stdout, "---\r\n") {
+                eprintln!("Error writing to stdout: {}", e);
+                break;
+            }
+
+            if let Err(e) = stdout.flush() {
+                eprintln!("Error flushing stdout: {}", e);
+                break;
+            }
+        }
+
+        match event::read() {
+            Ok(Event::Key(KeyEvent { code, .. })) => match code {
+                KeyCode::Char('q') | KeyCode::Esc => {
+                    break;
+                }
+                KeyCode::Down | KeyCode::Right | KeyCode::Enter => {
+                    if current_page + 1 < total_pages {
+                        display = true;
+                        current_page += 1;
+                    } else {
+                        display = false;
+                    }
+                }
+                _ => {
+                    display = false;
+                }
+            },
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("Error reading event: {}", e);
+                break;
+            }
+        }
+    }
+
+    if let Err(e) = execute!(stdout, Show) {
+        eprintln!("Error showing cursor: {}", e);
+    }
+    if let Err(e) = disable_raw_mode() {
+        eprintln!("Error disabling raw mode: {}", e);
+    }
+    if let Err(e) = execute!(stdout, Clear(ClearType::All), MoveTo(0, 0)) {
+        eprintln!("Error clearing screen: {}", e);
     }
 }
