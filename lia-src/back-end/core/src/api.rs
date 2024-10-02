@@ -6,7 +6,10 @@ use std::{
 use system::{Logger, EnvConfig};
 
 use crate::{
-    cmd_engine::CmdEngine, db::Database, errors::LiaCoreError, models::command::{Command, NewCommand, UpdateCommand}
+    cmd_engine::CmdEngine, 
+    db::Database, 
+    errors::LiaCoreError, 
+    models::command::{Command, NewCommand, UpdateCommand}
 };
 
 pub struct LiaCore {
@@ -92,8 +95,8 @@ impl LiaCore {
         }
     }
 
-    pub async fn search_commands(&self, query: &str) -> Result<Vec<Command>, LiaCoreError> {
-        self.db.search_commands(query).await
+    pub async fn search_commands(&self, query: &str, tags: Option<Vec<String>>) -> Result<Vec<Command>, LiaCoreError> {
+        self.db.search_commands(query, tags).await
     }
 
     pub async fn run_command(&self, cmd: Command, path: &Path) -> Result<Output, LiaCoreError> {
@@ -109,7 +112,7 @@ impl LiaCore {
         CmdEngine::execute_command_stream(&cmd.command_text, path, output_tx)
     }
 
-    pub fn is_sudo_user() -> Result<bool, LiaCoreError> {
+    pub fn is_sudo_user() -> bool {
         CmdEngine::is_sudo_user() 
     }
 }

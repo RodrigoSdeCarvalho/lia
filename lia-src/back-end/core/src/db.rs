@@ -1,13 +1,15 @@
 use sqlx::{
     postgres::PgPoolOptions, 
     PgPool,
+    Error as SqlxError
 };
 use uuid::Uuid;
 use chrono::Utc;
 
-use crate::models::command::{Command, NewCommand, UpdateCommand};
-use crate::errors::LiaCoreError;
-use sqlx::Error as SqlxError;
+use crate::{
+    models::command::{Command, NewCommand, UpdateCommand},
+    errors::LiaCoreError
+};
 
 use system::Logger;
 
@@ -96,7 +98,7 @@ impl Database {
                 Utc::now().naive_utc(),
                 update_cmd.name
             )
-            .execute(&mut *tx)  // Dereference `tx` here
+            .execute(&mut *tx)
             .await
             .map_err(LiaCoreError::DatabaseError)?;
         }
@@ -112,7 +114,7 @@ impl Database {
                 Utc::now().naive_utc(),
                 update_cmd.name
             )
-            .execute(&mut *tx)  // Dereference `tx` here
+            .execute(&mut *tx)
             .await
             .map_err(LiaCoreError::DatabaseError)?;
         }
@@ -128,7 +130,7 @@ impl Database {
                 Utc::now().naive_utc(),
                 update_cmd.name
             )
-            .execute(&mut *tx)  // Dereference `tx` here
+            .execute(&mut *tx)
             .await
             .map_err(LiaCoreError::DatabaseError)?;
         }
@@ -172,21 +174,82 @@ impl Database {
         }
     }
 
-    pub async fn search_commands(&self, query: &str) -> Result<Vec<Command>, LiaCoreError> {
-        let search_query = format!("{}:*", query.replace(" ", " & "));
-        let commands = sqlx::query_as!(
-            Command,
-            r#"
-            SELECT id, name, description, command_text, tags, created_at, updated_at
-            FROM commands
-            WHERE search_vector @@ to_tsquery('english', $1)
-            ORDER BY ts_rank(search_vector, to_tsquery('english', $1)) DESC
-            "#,
-            search_query
-        )
-        .fetch_all(&self.pool)
-        .await
-        .map_err(LiaCoreError::DatabaseError)?;
+    pub async fn search_commands(
+        &self,
+        query: &str,
+        tags: Option<Vec<String>>,
+    ) -> Result<Vec<Command>, LiaCoreError> {
+        let search_query = if !query.is_empty() {
+            Some(format!("{}:*", query.replace(" ", " & ")))
+        } else {
+            None
+        };
+
+        let commands = match (search_query, tags) {
+            (Some(sq), Some(tags_vec)) => {
+                sqlx::query_as!(
+                    Command,
+                    r#"
+                    SELECT id, name, description, command_text, tags, created_at, updated_at
+                    FROM commands
+                    WHERE
+                        search_vector @@ to_tsquery('english', $1)
+                        AND tags && $2::text[]
+                    ORDER BY ts_rank(search_vector, to_tsquery('english', $1)) DESC
+                    "#,
+                    sq,
+                    &tags_vec,
+                )
+                .fetch_all(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)?
+            }
+            (Some(sq), None) => {
+                sqlx::query_as!(
+                    Command,
+                    r#"
+                    SELECT id, name, description, command_text, tags, created_at, updated_at
+                    FROM commands
+                    WHERE
+                        search_vector @@ to_tsquery('english', $1)
+                    ORDER BY ts_rank(search_vector, to_tsquery('english', $1)) DESC
+                    "#,
+                    sq,
+                )
+                .fetch_all(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)?
+            }
+            (None, Some(tags_vec)) => {
+                sqlx::query_as!(
+                    Command,
+                    r#"
+                    SELECT id, name, description, command_text, tags, created_at, updated_at
+                    FROM commands
+                    WHERE
+                        tags && $1::text[]
+                    ORDER BY name
+                    "#,
+                    &tags_vec,
+                )
+                .fetch_all(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)?
+            }
+            (None, None) => {
+                sqlx::query_as!(
+                    Command,
+                    r#"
+                    SELECT id, name, description, command_text, tags, created_at, updated_at
+                    FROM commands
+                    ORDER BY name
+                    "#,
+                )
+                .fetch_all(&self.pool)
+                .await
+                .map_err(LiaCoreError::DatabaseError)?
+            }
+        };
 
         Ok(commands)
     }

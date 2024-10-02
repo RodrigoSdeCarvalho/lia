@@ -4,7 +4,10 @@ use std::{
 };
 use clap::{Parser, Subcommand, Args, arg};
 
-use lia_core::{LiaCore, models::command::{NewCommand, UpdateCommand}};
+use lia_core::{
+    LiaCore, 
+    models::command::{NewCommand, UpdateCommand}
+};
 use system::{Logger, set_process_name, SysConfigs};
 
 #[derive(Parser)]
@@ -33,7 +36,12 @@ enum Commands {
     /// Searches for commands matching the query.
     Search {
         /// The search query.
-        query: String,
+        #[arg(short, long)]
+        query: Option<String>,
+
+        /// Tags to filter by (comma-separated).
+        #[arg(short, long)]
+        tags: Option<String>,
     },    
     /// Executes a stored command by its name.
     Run {
@@ -141,8 +149,16 @@ async fn main() {
                 Err(e) => println!("Error retrieving commands: {}", e),
             }
         }
-        Commands::Search { query } => {
-            let commands = match lia_core.search_commands(&query).await {
+        Commands::Search { query, tags } => {
+            let tags_vec = tags.map(|t| {
+                t.split(',')
+                    .map(|s| s.trim().to_string())
+                    .collect::<Vec<String>>()
+            });
+
+            let query = query.unwrap_or_default();
+
+            let commands = match lia_core.search_commands(&query, tags_vec).await {
                 Ok(c) => c,
                 Err(_) => {
                     println!("Error searching for commands.");
@@ -187,13 +203,7 @@ async fn main() {
             };
         }
         Commands::Log { on, off } => {
-            let is_root = match LiaCore::is_sudo_user() {
-                Ok(r) => r,
-                Err(_) => {
-                    println!("Error checking if user is root.");
-                    return;
-                }
-            };
+            let is_root = LiaCore::is_sudo_user();
             if !is_root {
                 println!("This command must be run with sudo.");
                 return;
