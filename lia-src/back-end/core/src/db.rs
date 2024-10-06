@@ -409,7 +409,7 @@ mod tests {
             r#"
             CREATE TABLE IF NOT EXISTS commands (
                 id UUID PRIMARY KEY,
-                name TEXT NOT NULL,
+                name TEXT NOT NULL UNIQUE,  // Ensure name is unique
                 description TEXT,
                 command_text TEXT,
                 tags TEXT[],
@@ -436,7 +436,7 @@ mod tests {
         let db = Database { pool: pool.clone() };
 
         let new_command = NewCommand {
-            name: String::from("Test Command"),
+            name: String::from("Test Command Add"),
             description: Some(String::from("Test Description")),
             command_text: String::from("echo Hello, World!"),
             tags: Some(vec!["test".to_string(), "command".to_string()]),
@@ -447,7 +447,7 @@ mod tests {
 
         let commands = db.get_all_commands(10, 0).await.expect("Failed to fetch commands");
         assert_eq!(commands.len(), 1);
-        assert_eq!(commands[0].name, "Test Command");
+        assert_eq!(commands[0].name, "Test Command Add");
 
         teardown_test_db(&pool).await;
     }
@@ -458,7 +458,7 @@ mod tests {
         let db = Database { pool: pool.clone() };
 
         let new_command = NewCommand {
-            name: String::from("Test Command"),
+            name: String::from("Test Command Update"),
             description: Some(String::from("Test Description")),
             command_text: String::from("echo Hello, World!"),
             tags: Some(vec!["test".to_string(), "command".to_string()]),
@@ -467,7 +467,7 @@ mod tests {
         db.add_command(new_command).await.expect("Failed to add command");
 
         let update_command = UpdateCommand {
-            name: String::from("Test Command"),
+            name: String::from("Test Command Update"),
             new_description: Some(String::from("Updated Description")),
             new_command_text: None,
             new_tags: None,
@@ -476,29 +476,8 @@ mod tests {
         let result = db.update_command(update_command).await;
         assert!(result.is_ok());
 
-        let command = db.get_command_by_name("Test Command").await.expect("Failed to fetch command");
+        let command = db.get_command_by_name("Test Command Update").await.expect("Failed to fetch command");
         assert_eq!(command.description.unwrap(), "Updated Description");
-
-        teardown_test_db(&pool).await;
-    }
-
-    #[tokio::test]
-    async fn test_get_command_by_name() {
-        let pool = setup_test_db().await;
-        let db = Database { pool: pool.clone() };
-
-        let new_command = NewCommand {
-            name: String::from("Test Command"),
-            description: Some(String::from("Test Description")),
-            command_text: String::from("echo Hello, World!"),
-            tags: Some(vec!["test".to_string(), "command".to_string()]),
-        };
-
-        db.add_command(new_command).await.expect("Failed to add command");
-
-        let command = db.get_command_by_name("Test Command").await;
-        assert!(command.is_ok());
-        assert_eq!(command.unwrap().name, "Test Command");
 
         teardown_test_db(&pool).await;
     }
@@ -509,7 +488,7 @@ mod tests {
         let db = Database { pool: pool.clone() };
 
         let new_command = NewCommand {
-            name: String::from("Test Command"),
+            name: String::from("Test Command Delete"),
             description: Some(String::from("Test Description")),
             command_text: String::from("echo Hello, World!"),
             tags: Some(vec!["test".to_string(), "command".to_string()]),
@@ -517,7 +496,7 @@ mod tests {
 
         db.add_command(new_command).await.expect("Failed to add command");
 
-        db.delete_commands(Some("Test Command".to_string()), None)
+        db.delete_commands(Some("Test Command Delete".to_string()), None)
             .await
             .expect("Failed to delete command");
 
@@ -533,14 +512,14 @@ mod tests {
         let db = Database { pool: pool.clone() };
 
         let new_command1 = NewCommand {
-            name: String::from("Test Command 1"),
+            name: String::from("Test Command Search 1"),
             description: Some(String::from("First test command")),
             command_text: String::from("echo Test 1"),
             tags: Some(vec!["test".to_string(), "command".to_string()]),
         };
 
         let new_command2 = NewCommand {
-            name: String::from("Test Command 2"),
+            name: String::from("Test Command Search 2"),
             description: Some(String::from("Second test command")),
             command_text: String::from("echo Test 2"),
             tags: Some(vec!["test".to_string(), "search".to_string()]),
