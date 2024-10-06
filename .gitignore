@@ -26,3 +26,4 @@ lia-src/front-end/desktop/node_modules/
 lia-src/postcss.config.js
 lia-src/tailwind.config.js
 lia-src/front-end/desktop/package-lock.json
+lia-src/front-end/desktop/pnpm-lock.yaml
