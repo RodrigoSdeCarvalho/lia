@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { invoke } from '@tauri-apps/api ';
+import tauriApi from '@tauri-apps/api';
+const { invoke } = tauriApi.core;
 
 function AddCommand() {
   const [name, setName] = useState('');

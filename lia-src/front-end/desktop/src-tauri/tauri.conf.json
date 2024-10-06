@@ -1,22 +1,22 @@
 {
-  "$schema": "https://schema.tauri.app/config/2.0.0-rc",
-  "productName": "LiA Desktop",
+  "$schema": "https://schema.tauri.app/config/2.0.0",
+  "productName": "lia",
   "version": "0.1.0",
-  "identifier": "com.lia.dev",
+  "identifier": "com.lia.app",
   "build": {
-    "frontendDist": "../../src",
-    "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "beforeDevCommand": "trunk serve",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "trunk build",
+    "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
-        "title": "LiA",
+        "title": "lia",
         "width": 800,
-        "height": 600,
-        "resizable": true,
-        "fullscreen": false
+        "height": 600
+        
       }
     ],
     "security": {

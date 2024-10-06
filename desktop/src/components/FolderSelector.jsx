@@ -1,5 +1,7 @@
 import React from 'react';
-import { open } from '@tauri-apps/api/dialog';
+
+import tauriApi from '@tauri-apps/api';
+const { open } = tauriApi.dialog;
 
 function FolderSelector({ selectedFolder, setSelectedFolder }) {
   const selectFolder = async () => {

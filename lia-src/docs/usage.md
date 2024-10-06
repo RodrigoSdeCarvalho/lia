@@ -53,6 +53,13 @@ To install LiA, follow the steps below:
 
    Also, check this page to ensure you won't have any issues with the [Tauri Migration to webkit2gtk-4.1](https://v2.tauri.app/blog/tauri-2-0-0-alpha-3/).
 
+   Finally, install this cargo dependencies:
+
+   ```bash
+   cargo install trunk --locked
+   rustup target add wasm32-unknown-unknown
+   ```
+
 4. **Build the Project:**
 
    ```bash

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { invoke } from '@tauri-apps/api ';
+import tauriApi from '@tauri-apps/api';
+const { invoke } = tauriApi.core;
+
 import { listen } from '@tauri-apps/api/event';
 
 function CommandRunner({ selectedFolder, addLog }) {

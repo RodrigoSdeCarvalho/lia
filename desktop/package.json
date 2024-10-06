@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "@tauri-apps/api": "^2.0.1",
+        "dialog": "link:@tauri-apps/api/dialog",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-scripts": "^3.0.1",
