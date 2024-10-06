@@ -1,6 +1,6 @@
 use std::{
     path::Path,
-    process::Output, sync::mpsc::Sender
+    process::Output
 };
 
 use system::{Logger, EnvConfig};
@@ -107,7 +107,7 @@ impl LiaCore {
         &self,
         cmd: Command,
         path: &Path,
-        output_tx: Sender<String>,
+        output_tx: tokio::sync::mpsc::UnboundedSender<String>
     ) -> Result<(), LiaCoreError> {
         CmdEngine::execute_command_stream(&cmd.command_text, path, output_tx)
     }

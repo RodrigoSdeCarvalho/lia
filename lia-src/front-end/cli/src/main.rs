@@ -1,8 +1,5 @@
-use std::{
-    io::{stdout, Write},
-    sync::mpsc::channel,
-    thread,
-};
+use std::io::{stdout, Write};
+use tokio::task;
 
 use clap::{Parser, Subcommand, Args, arg};
 use crossterm::{
@@ -201,12 +198,18 @@ async fn main() {
                 }
             };
 
-            let (tx, rx) = channel();
-            let handle = thread::spawn(move || {
-                while let Ok(line) = rx.recv() {
-                    println!("{}", line);
-                }
-            });
+            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+            // let handle = thread::spawn(move || {
+            //     while let Ok(line) = rx.recv() {
+            //         println!("{}", line);
+            //     }
+            // });
+
+            let handle = task::spawn(async move {
+              while let Some(line) = rx.recv().await {
+                  println!("{}", line);
+              }
+          });
 
             let cmd = match lia_core.get_command_by_name(&name).await {
                 Ok(cmd) => cmd,
@@ -217,7 +220,7 @@ async fn main() {
             };
 
             match lia_core.run_command_stream(cmd, &path, tx).await {
-                Ok(_) => handle.join().expect("Failed to join thread"),
+                Ok(_) => handle.await.expect("Failed to join thread"),
                 Err(_) => println!("Error running command."),
             };
         }

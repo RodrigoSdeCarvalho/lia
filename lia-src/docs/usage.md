@@ -45,7 +45,15 @@ To install LiA, follow the steps below:
    cd lia/lia-src
    ```
 
-3. **Build the Project:**
+3. **Install Tauri dependencies:**
+
+   Tauri is a necessary dependency for LiA Desktop.
+
+   Check the [Tauri installation guide](https://v1.tauri.app/v1/guides/getting-started/prerequisites/#setting-up-linux) for the necessary dependencies for your system.
+
+   Also, check this page to ensure you won't have any issues with the [Tauri Migration to webkit2gtk-4.1](https://v2.tauri.app/blog/tauri-2-0-0-alpha-3/)
+
+4. **Build the Project:**
 
    ```bash
    make init
@@ -57,7 +65,7 @@ To install LiA, follow the steps below:
    >
    > Currently, LiA's database runs on port `5432`. Ensure this port is available on your system. If you have a PostgreSQL server running on this port, you may need to stop it before running LiA. In future versions, this port will be configurable.
 
-4. **Install the Binary:**
+5. **Install the Binary:**
 
    ```bash
    make install

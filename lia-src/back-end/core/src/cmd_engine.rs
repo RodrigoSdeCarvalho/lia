@@ -2,8 +2,7 @@ use crate::errors::LiaCoreError;
 use std::{
     io::{BufRead, BufReader}, 
     path::Path, 
-    process::{Command, Output, Stdio}, 
-    sync::mpsc::Sender
+    process::{Command, Output, Stdio}
 };
 
 #[cfg(target_os = "linux")]
@@ -40,7 +39,7 @@ impl CmdEngine {
     pub fn execute_command_stream(
         command_text: &str,
         path: &Path,
-        output_tx: Sender<String>,
+        output_tx: tokio::sync::mpsc::UnboundedSender<String>,
     ) -> Result<(), LiaCoreError> {
         if !path.exists() || !path.is_dir() {
             return Err(LiaCoreError::InvalidInputError(format!(

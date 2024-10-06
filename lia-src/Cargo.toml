@@ -3,6 +3,7 @@
 members = [
     "back-end/core",
     "front-end/cli",
+    "front-end/desktop/src-tauri",
     "system",
     "macros/benchmark_macro",
 ]
