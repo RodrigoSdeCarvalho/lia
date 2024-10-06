@@ -398,18 +398,16 @@ mod tests {
 
     async fn setup_test_db() -> PgPool {
         let database_url = EnvConfig::get_database_url();
-
         let pool = PgPoolOptions::new()
             .max_connections(1)
             .connect(&database_url)
             .await
             .expect("Failed to connect to test database");
-
         pool.execute(
             r#"
             CREATE TABLE IF NOT EXISTS commands (
                 id UUID PRIMARY KEY,
-                name TEXT NOT NULL UNIQUE,  // Ensure name is unique
+                name TEXT NOT NULL UNIQUE,
                 description TEXT,
                 command_text TEXT,
                 tags TEXT[],
@@ -420,7 +418,6 @@ mod tests {
         )
         .await
         .expect("Failed to create commands table");
-
         pool
     }
 
