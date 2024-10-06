@@ -394,11 +394,10 @@ impl Database {
 mod tests {
     use super::*;
     use sqlx::{Executor, PgPool};
-    use std::env;
+    use system::EnvConfig;
 
     async fn setup_test_db() -> PgPool {
-        let database_url = env::var("TEST_DATABASE_URL")
-            .expect("TEST_DATABASE_URL must be set for testing");
+        let database_url = EnvConfig::get_database_url();
 
         let pool = PgPoolOptions::new()
             .max_connections(1)
