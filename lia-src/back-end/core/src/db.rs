@@ -277,7 +277,6 @@ impl Database {
     ) -> Result<Vec<Command>, LiaCoreError> {
         match (name, tags) {
             (Some(name), Some(tags_vec)) => {
-                // Both name and tags are provided
                 sqlx::query_as!(
                     Command,
                     r#"
@@ -295,7 +294,6 @@ impl Database {
                 .map_err(LiaCoreError::DatabaseError)
             }
             (Some(name), None) => {
-                // Only name is provided
                 sqlx::query_as!(
                     Command,
                     r#"
@@ -311,7 +309,6 @@ impl Database {
                 .map_err(LiaCoreError::DatabaseError)
             }
             (None, Some(tags_vec)) => {
-                // Only tags are provided
                 sqlx::query_as!(
                     Command,
                     r#"
@@ -327,7 +324,6 @@ impl Database {
                 .map_err(LiaCoreError::DatabaseError)
             }
             (None, None) => {
-                // Should not reach here as we check for at least one parameter in CLI
                 Ok(vec![])
             }
         }
@@ -340,7 +336,6 @@ impl Database {
     ) -> Result<(), LiaCoreError> {
         match (name, tags) {
             (Some(name), Some(tags_vec)) => {
-                // Both name and tags are provided
                 sqlx::query!(
                     r#"
                     DELETE FROM commands
@@ -356,7 +351,6 @@ impl Database {
                 .map_err(LiaCoreError::DatabaseError)?;
             }
             (Some(name), None) => {
-                // Only name is provided
                 sqlx::query!(
                     r#"
                     DELETE FROM commands
@@ -370,7 +364,6 @@ impl Database {
                 .map_err(LiaCoreError::DatabaseError)?;
             }
             (None, Some(tags_vec)) => {
-                // Only tags are provided
                 sqlx::query!(
                     r#"
                     DELETE FROM commands
@@ -383,9 +376,7 @@ impl Database {
                 .await
                 .map_err(LiaCoreError::DatabaseError)?;
             }
-            (None, None) => {
-                // Should not reach here as we check for at least one parameter in CLI
-            }
+            (None, None) => {}
         }
         Ok(())
     }
@@ -396,5 +387,176 @@ impl Database {
             .await
             .map_err(LiaCoreError::DatabaseError)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::{Executor, PgPool};
+    use std::env;
+
+    async fn setup_test_db() -> PgPool {
+        let database_url = env::var("TEST_DATABASE_URL")
+            .expect("TEST_DATABASE_URL must be set for testing");
+
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect(&database_url)
+            .await
+            .expect("Failed to connect to test database");
+
+        pool.execute(
+            r#"
+            CREATE TABLE IF NOT EXISTS commands (
+                id UUID PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                command_text TEXT,
+                tags TEXT[],
+                created_at TIMESTAMP,
+                updated_at TIMESTAMP
+            )
+            "#
+        )
+        .await
+        .expect("Failed to create commands table");
+
+        pool
+    }
+
+    async fn teardown_test_db(pool: &PgPool) {
+        pool.execute("DROP TABLE IF EXISTS commands")
+            .await
+            .expect("Failed to drop commands table");
+    }
+
+    #[tokio::test]
+    async fn test_add_command() {
+        let pool = setup_test_db().await;
+        let db = Database { pool: pool.clone() };
+
+        let new_command = NewCommand {
+            name: String::from("Test Command"),
+            description: Some(String::from("Test Description")),
+            command_text: String::from("echo Hello, World!"),
+            tags: Some(vec!["test".to_string(), "command".to_string()]),
+        };
+
+        let result = db.add_command(new_command).await;
+        assert!(result.is_ok());
+
+        let commands = db.get_all_commands(10, 0).await.expect("Failed to fetch commands");
+        assert_eq!(commands.len(), 1);
+        assert_eq!(commands[0].name, "Test Command");
+
+        teardown_test_db(&pool).await;
+    }
+
+    #[tokio::test]
+    async fn test_update_command() {
+        let pool = setup_test_db().await;
+        let db = Database { pool: pool.clone() };
+
+        let new_command = NewCommand {
+            name: String::from("Test Command"),
+            description: Some(String::from("Test Description")),
+            command_text: String::from("echo Hello, World!"),
+            tags: Some(vec!["test".to_string(), "command".to_string()]),
+        };
+
+        db.add_command(new_command).await.expect("Failed to add command");
+
+        let update_command = UpdateCommand {
+            name: String::from("Test Command"),
+            new_description: Some(String::from("Updated Description")),
+            new_command_text: None,
+            new_tags: None,
+        };
+
+        let result = db.update_command(update_command).await;
+        assert!(result.is_ok());
+
+        let command = db.get_command_by_name("Test Command").await.expect("Failed to fetch command");
+        assert_eq!(command.description.unwrap(), "Updated Description");
+
+        teardown_test_db(&pool).await;
+    }
+
+    #[tokio::test]
+    async fn test_get_command_by_name() {
+        let pool = setup_test_db().await;
+        let db = Database { pool: pool.clone() };
+
+        let new_command = NewCommand {
+            name: String::from("Test Command"),
+            description: Some(String::from("Test Description")),
+            command_text: String::from("echo Hello, World!"),
+            tags: Some(vec!["test".to_string(), "command".to_string()]),
+        };
+
+        db.add_command(new_command).await.expect("Failed to add command");
+
+        let command = db.get_command_by_name("Test Command").await;
+        assert!(command.is_ok());
+        assert_eq!(command.unwrap().name, "Test Command");
+
+        teardown_test_db(&pool).await;
+    }
+
+    #[tokio::test]
+    async fn test_delete_command() {
+        let pool = setup_test_db().await;
+        let db = Database { pool: pool.clone() };
+
+        let new_command = NewCommand {
+            name: String::from("Test Command"),
+            description: Some(String::from("Test Description")),
+            command_text: String::from("echo Hello, World!"),
+            tags: Some(vec!["test".to_string(), "command".to_string()]),
+        };
+
+        db.add_command(new_command).await.expect("Failed to add command");
+
+        db.delete_commands(Some("Test Command".to_string()), None)
+            .await
+            .expect("Failed to delete command");
+
+        let commands = db.get_all_commands(10, 0).await.expect("Failed to fetch commands");
+        assert_eq!(commands.len(), 0);
+
+        teardown_test_db(&pool).await;
+    }
+
+    #[tokio::test]
+    async fn test_search_commands() {
+        let pool = setup_test_db().await;
+        let db = Database { pool: pool.clone() };
+
+        let new_command1 = NewCommand {
+            name: String::from("Test Command 1"),
+            description: Some(String::from("First test command")),
+            command_text: String::from("echo Test 1"),
+            tags: Some(vec!["test".to_string(), "command".to_string()]),
+        };
+
+        let new_command2 = NewCommand {
+            name: String::from("Test Command 2"),
+            description: Some(String::from("Second test command")),
+            command_text: String::from("echo Test 2"),
+            tags: Some(vec!["test".to_string(), "search".to_string()]),
+        };
+
+        db.add_command(new_command1).await.expect("Failed to add command 1");
+        db.add_command(new_command2).await.expect("Failed to add command 2");
+
+        let search_results = db
+            .search_commands("Test", Some(vec!["command".to_string()]), 10, 0)
+            .await
+            .expect("Failed to search commands");
+
+        assert_eq!(search_results.len(), 2);
+
+        teardown_test_db(&pool).await;
     }
 }
