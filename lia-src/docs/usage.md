@@ -51,7 +51,7 @@ To install LiA, follow the steps below:
 
    Check the [Tauri installation guide](https://v1.tauri.app/v1/guides/getting-started/prerequisites/#setting-up-linux) for the necessary dependencies for your system.
 
-   Also, check this page to ensure you won't have any issues with the [Tauri Migration to webkit2gtk-4.1](https://v2.tauri.app/blog/tauri-2-0-0-alpha-3/)
+   Also, check this page to ensure you won't have any issues with the [Tauri Migration to webkit2gtk-4.1](https://v2.tauri.app/blog/tauri-2-0-0-alpha-3/).
 
 4. **Build the Project:**
 
